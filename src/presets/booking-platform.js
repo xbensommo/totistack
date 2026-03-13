@@ -5,5 +5,6 @@ export default {
   features: ['auth', 'dashboard', 'booking', 'notifications'],
   options: {
     kind: 'platform',
+    package: 'booking'
   },
 };

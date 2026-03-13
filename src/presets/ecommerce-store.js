@@ -5,5 +5,6 @@ export default {
   features: ['auth', 'dashboard'],
   options: {
     kind: 'store',
+    package: 'ecommerce'
   },
 }; 

@@ -2,6 +2,15 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
+import forms from '../features/forms/index.js';
+import cms from '../features/cms/index.js';
+import payments from '../features/payments/index.js';
+import crm from '../features/crm/index.js';
+import catalog from '../features/catalog/index.js';
+import clientRecords from '../features/client-records/index.js';
+import messaging from '../features/messaging/index.js';
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

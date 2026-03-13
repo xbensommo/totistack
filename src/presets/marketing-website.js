@@ -5,5 +5,6 @@ export default {
   features: ['seo'],
   options: {
     kind: 'website',
+    package: 'starter'
   },
 };
