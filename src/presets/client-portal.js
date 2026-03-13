@@ -1,6 +1,10 @@
-git init
-git add .
-git commit -m "Initial TotiStack CLI"
-git branch -M main
-git remote add origin https://github.com/xbensommo/totistack.git
-git push -u origin main
+export default {
+  name: 'client-portal',
+  title: 'Client Portal',
+  description: 'Secure portal for clients to log in, view records, manage requests, and access protected content.',
+  features: ['auth', 'dashboard', 'notifications'],
+  options: {
+    kind: 'portal',
+    package: 'portal',
+  },
+};

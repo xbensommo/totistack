@@ -130,7 +130,7 @@ async function loadPresetModules(presetDir = PRESET_DIR) {
 
     try {
       const preset = await importModule(presetPath);
-      console.log('PRESET FILE:', entry.name, preset);
+      //console.log('PRESET FILE:', entry.name, preset);
       assertPresetShape(preset);
       presets.push(preset);
     } catch (error) {
