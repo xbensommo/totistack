@@ -1,110 +1,95 @@
 /**
- * @file auth/index.js
- * @description Provider-aware authentication feature for Totistack.
+ * @file index.js
+ * @description Auth feature for Totistack with provider-specific templates.
  * @author Totisoft CC
  * @date 2026-03-13
  * @email info@totisoft.com
  */
 
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const TEMPLATE_ROOT = path.resolve(__dirname, '../../templates/features/auth');
+import { defineFeature, writeFeatureConfig, appendReadmeSection } from '../_shared.js';
 
 /**
- * Returns dependency names required for a given auth provider.
- *
- * @param {string} provider - Auth provider identifier.
- * @returns {string[]} Runtime dependency names.
+ * @type {Record<string, { title: string, template: string, packages: string[] }>}
  */
-function getProviderDependencies(provider) {
-  switch (provider) {
-    case 'firebase':
-      return ['firebase'];
-    case 'supabase':
-      return ['@supabase/supabase-js'];
-    case 'custom':
-      return [];
-    default:
-      return [];
-  }
-}
-
-/**
- * Resolves the template directory for a provider.
- *
- * @param {string} provider - Auth provider identifier.
- * @returns {string} Absolute template directory path.
- */
-function getProviderTemplateDir(provider) {
-  return path.join(TEMPLATE_ROOT, provider);
-}
-
-export default {
-  name: 'auth',
-  title: 'Authentication',
-  description: 'Authentication foundation for protected areas and user sessions.',
-  category: 'platform',
-  dependencies: [],
-  optionalDependencies: [],
-  incompatibleWith: [],
-  prompts: [
-    {
-      name: 'provider',
-      type: 'list',
-      message: 'Choose an authentication provider',
-      choices: [
-        { name: 'Firebase Auth', value: 'firebase' },
-        { name: 'Supabase Auth', value: 'supabase' },
-        { name: 'Custom Auth', value: 'custom' },
-      ],
-      default: 'firebase',
-    },
-  ],
-
-  /**
-   * Installs the auth feature using provider-specific templates.
-   *
-   * @param {Object} ctx - Installer context.
-   * @returns {Promise<void>}
-   */
-  install: async (ctx) => {
-    const config = ctx.getFeatureConfig('auth');
-    const provider = config.provider || 'firebase';
-    const templateDir = getProviderTemplateDir(provider);
-
-    ctx.log(`Using auth provider: ${provider}`);
-
-    await ctx.ensureDir('src/modules/auth');
-
-    await ctx.copyTemplate(templateDir, 'src/modules/auth', {
-      variables: {
-        projectName: ctx.manifest.name || 'toti-app',
-        authProvider: provider,
-      },
-      overwrite: false,
-    });
-
-    await ctx.writeFile(
-      'src/modules/auth/index.js',
-      `export { authModule } from './provider.js';
-`,
-      { overwrite: true }
-    );
-
-    await ctx.addEnv([
-      'VITE_AUTH_ENABLED=true',
-      `VITE_AUTH_PROVIDER=${provider}`,
-    ]);
-
-    await ctx.addDependencies(getProviderDependencies(provider));
-
-    await ctx.upsertJson('package.json', (pkg) => {
-      pkg.scripts ||= {};
-      pkg.scripts['auth:check'] ||= 'echo "Auth module ready"';
-      return pkg;
-    });
+const PROVIDERS = {
+  firebase: {
+    title: 'Firebase Authentication',
+    template: 'features/auth/firebase',
+    packages: ['firebase'],
+  },
+  supabase: {
+    title: 'Supabase Auth',
+    template: 'features/auth/supabase',
+    packages: ['@supabase/supabase-js'],
+  },
+  custom: {
+    title: 'Custom Auth',
+    template: 'features/auth/custom',
+    packages: [],
   },
 };
+
+export default defineFeature({
+  name: 'auth',
+  title: 'Authentication',
+  description: 'Adds authentication scaffolding and provider selection.',
+  prompts: [
+    {
+      type: 'select',
+      name: 'auth.provider',
+      message: 'Choose auth provider',
+      choices: ['firebase', 'supabase', 'custom'],
+      initial: 'firebase',
+    },
+  ],
+  async install(ctx) {
+    const providerName = ctx.answers?.auth?.provider || 'firebase';
+    const provider = PROVIDERS[providerName] || PROVIDERS.firebase;
+    const templatePath = ctx.resolveTemplate(provider.template);
+
+    await ctx.runHook('beforeInstall', { feature: 'auth', provider: providerName });
+
+    try {
+      await ctx.copyTemplate(templatePath, '.');
+    } catch {
+      await ctx.writeFile(
+        'src/auth/index.js',
+        ctx.render(`/**
+ * Generated auth entry.
+ */
+export const authProvider = "{{ answers.auth.provider }}";
+
+export function createAuth() {
+  return {
+    provider: authProvider,
+    login() {
+      throw new Error("Implement login for " + authProvider);
+    },
+    logout() {
+      throw new Error("Implement logout for " + authProvider);
+    },
+  };
+}
+`)
+      );
+    }
+
+    await writeFeatureConfig(ctx, 'auth', {
+      provider: providerName,
+      packages: provider.packages,
+    });
+
+    await ctx.mergeJson('package.json', {
+      dependencies: Object.fromEntries(provider.packages.map((name) => [name, 'latest'])),
+    });
+
+    await appendReadmeSection(ctx, 'Authentication', [
+      `Provider: ${provider.title}`,
+      'Configure environment variables before first run.',
+      'Implement provider-specific guards, session storage, and route protection.',
+    ]);
+
+    ctx.addTask(`Configure auth provider: ${providerName}`);
+    await ctx.runHook('afterInstall', { feature: 'auth', provider: providerName });
+  },
+});

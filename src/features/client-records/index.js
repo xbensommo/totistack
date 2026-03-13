@@ -1,66 +1,49 @@
 /**
- * @file client-records/index.js
- * @description Client records feature for protected records and access control.
+ * @file index.js
+ * @description Client records feature for Totistack.
  * @author Totisoft CC
  * @date 2026-03-13
  * @email info@totisoft.com
  */
 
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { defineFeature, writeFeatureConfig, appendReadmeSection } from '../_shared.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const TEMPLATE_ROOT = path.resolve(__dirname, '../../templates/features/client-records');
-
-function getVariantTemplateDir(scope) {
-  return path.join(TEMPLATE_ROOT, scope);
-}
-
-export default {
+export default defineFeature({
   name: 'client-records',
   title: 'Client Records',
-  description: 'Protected client record storage and access patterns.',
-  category: 'operations',
-  dependencies: ['auth', 'dashboard'],
-  optionalDependencies: ['notifications'],
-  incompatibleWith: [],
-  prompts: [
-    {
-      name: 'scope',
-      type: 'list',
-      message: 'Choose client records access scope',
-      choices: [
-        { name: 'Internal staff only', value: 'internal' },
-        { name: 'Shared staff and client access', value: 'shared' },
-      ],
-      default: 'internal',
-    },
-  ],
+  description: 'Adds client profile and record scaffolding.',
+  async install(ctx) {
+    await ctx.runHook('beforeInstall', { feature: 'client-records' });
 
-  install: async (ctx) => {
-    const config = ctx.getFeatureConfig('client-records');
-    const scope = config.scope || 'internal';
-    const templateDir = getVariantTemplateDir(scope);
-
-    await ctx.ensureDir('src/modules/client-records');
-
-    await ctx.copyTemplate(templateDir, 'src/modules/client-records', {
-      variables: {
-        projectName: ctx.manifest.name || 'toti-app',
-        clientRecordsScope: scope,
-      },
+    await writeFeatureConfig(ctx, 'client-records', {
+      profile: true,
+      notes: true,
+      attachments: false,
+      timeline: true,
     });
 
     await ctx.writeFile(
       'src/modules/client-records/index.js',
-      `export { clientRecordsModule } from './module.js';\n`,
-      { overwrite: true }
+      `export const clientRecordFields = [
+  "id",
+  "name",
+  "email",
+  "phone",
+  "status",
+  "notes",
+  "createdAt",
+  "updatedAt"
+];
+`
     );
 
-    await ctx.addEnv([
-      'VITE_CLIENT_RECORDS_ENABLED=true',
-      `VITE_CLIENT_RECORDS_SCOPE=${scope}`,
+    await appendReadmeSection(ctx, 'Client Records', [
+      'Set up profile, notes, status history, and internal timeline.',
+      'Extend with attachments, case files, or medical/service history as needed.',
+      'Works well with CRM, forms, and messaging.',
     ]);
+
+    ctx.addTask('Define client records schema and permissions');
+    await ctx.runHook('afterInstall', { feature: 'client-records' });
   },
-};
+});

@@ -1,70 +1,57 @@
 /**
- * @file booking/index.js
- * @description Provider-aware booking feature for Totistack.
+ * @file index.js
+ * @description Booking feature for Totistack.
  * @author Totisoft CC
  * @date 2026-03-13
  * @email info@totisoft.com
  */
 
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { defineFeature, writeFeatureConfig, appendReadmeSection } from '../_shared.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const TEMPLATE_ROOT = path.resolve(__dirname, '../../templates/features/booking');
-
-function getVariantTemplateDir(visibility) {
-  return path.join(TEMPLATE_ROOT, visibility);
-}
-
-export default {
+export default defineFeature({
   name: 'booking',
-  title: 'Booking System',
-  description: 'Appointments, scheduling, and booking workflows.',
-  category: 'platform',
-  dependencies: ['auth', 'dashboard'],
-  optionalDependencies: ['notifications', 'whatsapp'],
-  incompatibleWith: [],
+  title: 'Booking',
+  description: 'Adds booking flows for private or public scheduling.',
   prompts: [
     {
-      name: 'visibility',
-      type: 'list',
-      message: 'Should the booking system be public or private?',
-      choices: [
-        { name: 'Public booking page', value: 'public' },
-        { name: 'Private/internal booking only', value: 'private' },
-      ],
-      default: 'public',
+      type: 'select',
+      name: 'booking.visibility',
+      message: 'Booking access type',
+      choices: ['public', 'private'],
+      initial: 'public',
     },
   ],
+  async install(ctx) {
+    const visibility = ctx.answers?.booking?.visibility || 'public';
 
-  install: async (ctx) => {
-    const config = ctx.getFeatureConfig('booking');
-    const visibility = config.visibility || 'public';
-    const templateDir = getVariantTemplateDir(visibility);
+    await ctx.runHook('beforeInstall', { feature: 'booking', visibility });
 
-    ctx.log(`Using booking visibility: ${visibility}`);
-
-    await ctx.ensureDir('src/modules/booking');
-
-    await ctx.copyTemplate(templateDir, 'src/modules/booking', {
-      variables: {
-        projectName: ctx.manifest.name || 'toti-app',
-        bookingVisibility: visibility,
-      },
+    await writeFeatureConfig(ctx, 'booking', {
+      visibility,
+      allowGuestBooking: visibility === 'public',
+      requireLogin: visibility === 'private',
     });
 
     await ctx.writeFile(
       'src/modules/booking/index.js',
-      `export { bookingModule } from './module.js';\n`,
-      { overwrite: true }
+      `export const bookingConfig = ${JSON.stringify(
+        {
+          visibility,
+          allowGuestBooking: visibility === 'public',
+          requireLogin: visibility === 'private',
+        },
+        null,
+        2
+      )};\n`
     );
 
-    await ctx.addEnv([
-      'VITE_BOOKING_ENABLED=true',
-      `VITE_BOOKING_VISIBILITY=${visibility}`,
+    await appendReadmeSection(ctx, 'Booking', [
+      `Visibility: ${visibility}`,
+      'Add appointment rules, slot generation, and booking confirmation handlers.',
+      'Connect notifications after booking submission.',
     ]);
 
-    await ctx.addDependencies(['date-fns']);
+    ctx.addTask('Configure booking slots and business rules');
+    await ctx.runHook('afterInstall', { feature: 'booking', visibility });
   },
-};
+});

@@ -1,66 +1,43 @@
 /**
- * @file forms/index.js
- * @description Forms feature for lead capture, onboarding, and custom workflows.
+ * @file index.js
+ * @description Forms feature for Totistack.
  * @author Totisoft CC
  * @date 2026-03-13
  * @email info@totisoft.com
  */
 
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { defineFeature, writeFeatureConfig, appendReadmeSection } from '../_shared.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const TEMPLATE_ROOT = path.resolve(__dirname, '../../templates/features/forms');
-
-function getVariantTemplateDir(purpose) {
-  return path.join(TEMPLATE_ROOT, purpose);
-}
-
-export default {
+export default defineFeature({
   name: 'forms',
-  title: 'Forms Engine',
-  description: 'Reusable forms for enquiries, onboarding, and lead capture.',
-  category: 'business',
-  dependencies: [],
-  optionalDependencies: ['notifications'],
-  incompatibleWith: [],
-  prompts: [
-    {
-      name: 'purpose',
-      type: 'list',
-      message: 'Choose forms purpose',
-      choices: [
-        { name: 'Lead capture forms', value: 'lead-capture' },
-        { name: 'Onboarding forms', value: 'onboarding' },
-      ],
-      default: 'lead-capture',
-    },
-  ],
+  title: 'Forms',
+  description: 'Adds configurable form scaffolding and submission handling.',
+  async install(ctx) {
+    await ctx.runHook('beforeInstall', { feature: 'forms' });
 
-  install: async (ctx) => {
-    const config = ctx.getFeatureConfig('forms');
-    const purpose = config.purpose || 'lead-capture';
-    const templateDir = getVariantTemplateDir(purpose);
-
-    await ctx.ensureDir('src/modules/forms');
-
-    await ctx.copyTemplate(templateDir, 'src/modules/forms', {
-      variables: {
-        projectName: ctx.manifest.name || 'toti-app',
-        formsPurpose: purpose,
-      },
+    await writeFeatureConfig(ctx, 'forms', {
+      validation: true,
+      submissions: true,
+      multiStep: true,
     });
 
     await ctx.writeFile(
       'src/modules/forms/index.js',
-      `export { formsModule } from './module.js';\n`,
-      { overwrite: true }
+      `export const formsConfig = {
+  validation: true,
+  submissions: true,
+  multiStep: true
+};
+`
     );
 
-    await ctx.addEnv([
-      'VITE_FORMS_ENABLED=true',
-      `VITE_FORMS_PURPOSE=${purpose}`,
+    await appendReadmeSection(ctx, 'Forms', [
+      'Supports contact, intake, onboarding, and assessment forms.',
+      'Add field schemas, validation rules, and submission actions.',
+      'Integrates well with CRM, booking, and notifications.',
     ]);
+
+    ctx.addTask('Create reusable form schema layer');
+    await ctx.runHook('afterInstall', { feature: 'forms' });
   },
-};
+});
