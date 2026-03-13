@@ -1,0 +1,4 @@
+export const fcmNotificationChannel = {
+  enabled: true,
+  channel: 'fcm',
+};

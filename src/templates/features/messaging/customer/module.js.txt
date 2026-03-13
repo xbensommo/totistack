@@ -1,0 +1,5 @@
+export const messagingModule = {
+  enabled: true,
+  mode: 'customer',
+  projectName: '{{projectName}}',
+};

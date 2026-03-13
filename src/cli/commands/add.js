@@ -1,5 +1,8 @@
 import chalk from 'chalk';
 import { installFeatures } from '../../core/installer.js';
+import { loadManifest, saveManifest } from '../../core/manifest.js';
+import { resolveFeatures } from '../../core/resolver.js';
+import { collectFeatureAnswers } from '../../core/feature-prompts.js';
 
 export function registerAddCommand(program) {
   program
@@ -8,8 +11,31 @@ export function registerAddCommand(program) {
     .option('--dry-run', 'Preview without writing files')
     .action(async (featureNames, options) => {
       try {
+        const projectRoot = process.cwd();
+        const manifest = await loadManifest(projectRoot);
+
+        if (!manifest) {
+          throw new Error('No toti.project.json found. Run create first.');
+        }
+
+        const finalFeatures = await resolveFeatures([
+          ...(manifest.features || []),
+          ...featureNames,
+        ]);
+
+        const featureConfig = await collectFeatureAnswers(finalFeatures, {
+          existingAnswers: manifest.featureConfig || {},
+        });
+
+        if (!options.dryRun) {
+          await saveManifest(projectRoot, {
+            ...manifest,
+            featureConfig,
+          });
+        }
+
         const result = await installFeatures({
-          projectRoot: process.cwd(),
+          projectRoot,
           featureNames,
           dryRun: !!options.dryRun,
         });

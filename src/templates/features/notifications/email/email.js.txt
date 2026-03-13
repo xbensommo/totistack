@@ -1,0 +1,4 @@
+export const emailNotificationChannel = {
+  enabled: true,
+  channel: 'email',
+};

@@ -1,0 +1,6 @@
+export const cmsModule = {
+  enabled: true,
+  mode: 'blog',
+  collections: ['pages', 'posts'],
+  projectName: '{{projectName}}',
+};

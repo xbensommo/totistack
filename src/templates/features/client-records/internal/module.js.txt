@@ -1,0 +1,6 @@
+export const clientRecordsModule = {
+  enabled: true,
+  scope: 'internal',
+  secure: true,
+  projectName: '{{projectName}}',
+};

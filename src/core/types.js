@@ -1,4 +1,15 @@
 /**
+ * Prompt shape
+ *
+ * {
+ *   name: string,
+ *   type: 'input' | 'list' | 'checkbox' | 'confirm',
+ *   message: string,
+ *   choices?: Array<{ name: string, value: any }> | string[],
+ *   default?: any,
+ *   when?: (answers, ctx) => boolean
+ * }
+ *
  * Feature contract reference
  *
  * {
@@ -12,16 +23,6 @@
  *   prompts?: Array<Prompt>,
  *   install: async (ctx) => void,
  *   doctor?: async (ctx) => Array<string>
- * }
- *
- * Preset contract reference
- *
- * {
- *   name: string,
- *   title: string,
- *   description: string,
- *   features: string[],
- *   options?: object
  * }
  */
 export {};

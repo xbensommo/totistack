@@ -1,0 +1,4 @@
+export const whatsappNotificationChannel = {
+  enabled: true,
+  channel: 'whatsapp',
+};

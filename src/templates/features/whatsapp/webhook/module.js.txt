@@ -1,0 +1,5 @@
+export const whatsappModule = {
+  enabled: true,
+  provider: 'webhook',
+  projectName: '{{projectName}}',
+};

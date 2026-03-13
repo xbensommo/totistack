@@ -5,6 +5,7 @@ export function createDefaultManifest(overrides = {}) {
     stack: 'vue-firebase',
     preset: null,
     features: [],
+    featureConfig: {},
     options: {},
     createdAt: new Date().toISOString(),
     ...overrides,

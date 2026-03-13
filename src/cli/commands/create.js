@@ -2,6 +2,7 @@ import path from 'path';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import { ensureProjectRoot, ensureBasePackageJson } from '../../core/project.js';
+import { collectFeatureAnswers } from '../../core/feature-prompts.js';
 import { createDefaultManifest } from '../../core/default-manifest.js';
 import { saveManifest } from '../../core/manifest.js';
 import { listPresets, listFeatures } from '../../core/registry.js';
@@ -72,6 +73,8 @@ export function registerCreateCommand(program) {
           ...selectedFeatures,
         ]);
 
+        const featureConfig = await collectFeatureAnswers(finalFeatureSet);
+
         if (!options.dryRun) {
           await ensureProjectRoot(projectRoot);
           await ensureBasePackageJson(projectRoot, projectName);
@@ -79,6 +82,7 @@ export function registerCreateCommand(program) {
           const manifest = createDefaultManifest({
             name: projectName,
             stack: options.stack,
+            featureConfig,
             preset: preset.name,
             features: [],
             options: preset.options || {},

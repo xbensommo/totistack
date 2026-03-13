@@ -1,0 +1,5 @@
+export const catalogModule = {
+  enabled: true,
+  mode: 'inventory',
+  projectName: '{{projectName}}',
+};

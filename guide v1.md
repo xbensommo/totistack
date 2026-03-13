@@ -1108,12 +1108,13 @@ This fixes the big architecture problems:
 # 16. What you should add next
 
 After this core works, the next layer should be:
+if backend databse is firebase, use ""
 
 1. **feature prompts**
 
    * booking asks public/private
    * auth asks firebase/supabase/custom
-   * notifications asks email/whatsapp/both
+   * notifications asks email/whatsapp/fcm for firebase/in-app/both
 
 2. **template copier**
 

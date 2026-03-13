@@ -1,0 +1,5 @@
+export const dashboardModule = {
+  enabled: true,
+  layout: 'sidebar',
+  projectName: '{{projectName}}',
+};

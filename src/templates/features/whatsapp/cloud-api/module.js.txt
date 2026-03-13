@@ -1,0 +1,5 @@
+export const whatsappModule = {
+  enabled: true,
+  provider: 'cloud-api',
+  projectName: '{{projectName}}',
+};

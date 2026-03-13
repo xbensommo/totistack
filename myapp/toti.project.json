@@ -1,0 +1,25 @@
+{
+  "name": "myapp",
+  "framework": "vue",
+  "stack": "vue-firebase",
+  "preset": "booking-platform",
+  "features": [],
+  "featureConfig": {
+    "auth": {
+      "provider": "firebase"
+    },
+    "booking": {
+      "visibility": "public"
+    },
+    "notifications": {
+      "channels": [
+        "email"
+      ]
+    }
+  },
+  "options": {
+    "kind": "platform",
+    "package": "booking"
+  },
+  "createdAt": "2026-03-13T07:41:29.681Z"
+}

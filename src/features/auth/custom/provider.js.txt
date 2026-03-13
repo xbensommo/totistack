@@ -1,0 +1,13 @@
+/**
+ * @file provider.js
+ * @description Custom authentication provider module.
+ * @author Totisoft CC
+ * @date 2026-03-13
+ * @email info@totisoft.com
+ */
+
+export const authModule = {
+  enabled: true,
+  provider: 'custom',
+  projectName: '{{projectName}}',
+};

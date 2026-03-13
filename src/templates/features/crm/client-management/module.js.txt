@@ -1,0 +1,6 @@
+export const crmModule = {
+  enabled: true,
+  type: 'client-management',
+  entities: ['clients', 'accounts', 'activities'],
+  projectName: '{{projectName}}',
+};

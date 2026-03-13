@@ -1,0 +1,6 @@
+export const crmModule = {
+  enabled: true,
+  type: 'pipeline',
+  entities: ['leads', 'stages', 'activities'],
+  projectName: '{{projectName}}',
+};

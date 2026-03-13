@@ -1,0 +1,5 @@
+export const messagingModule = {
+  enabled: true,
+  mode: 'internal',
+  projectName: '{{projectName}}',
+};
