@@ -1,0 +1,59 @@
+{
+  "name": "@xbensommo/totistack",
+  "version": "0.1.0",
+  "description": "Totistack CLI — modular project composer for building full-stack applications and business platforms.",
+  "author": "Totisoft CC",
+  "license": "MIT",
+  "type": "module",
+
+  "bin": {
+    "toti": "./bin/toti.js"
+  },
+
+  "main": "src/cli/index.js",
+
+  "files": [
+    "bin",
+    "src"
+  ],
+
+  "scripts": {
+    "start": "node bin/toti.js",
+    "dev": "node bin/toti.js",
+    "features": "node bin/toti.js features",
+    "presets": "node bin/toti.js presets",
+    "doctor": "node bin/toti.js doctor",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "inquirer": "^9.2.22"
+  },
+
+  "devDependencies": {
+    "eslint": "^9.6.0",
+    "prettier": "^3.3.3"
+  },
+
+  "engines": {
+    "node": ">=18"
+  },
+
+  "exports": {
+    ".": "./src/cli/index.js"
+  },
+
+  "keywords": [
+    "cli",
+    "scaffolding",
+    "framework",
+    "totisoft",
+    "project-composer",
+    "fullstack",
+    "vue",
+    "firebase",
+    "platform-builder"
+  ]
+}
