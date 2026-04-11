@@ -1,0 +1,67 @@
+{
+  "name": "@xbensommo/totistack",
+  "version": "2.1.12",
+  "description": "Totistack v2 - Modular business application framework",
+  "type": "module",
+  "bin": {
+    "toti": "bin/toti.js"
+  },
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./cli": "./src/cli/index.js",
+    "./core": "./src/core/index.js"
+  },
+  "scripts": {
+    "dev": "node bin/toti.js",
+    "test": "node -e \"console.log('No tests yet')\"",
+    "lint": "eslint src/**/*.js",
+    "format": "prettier --write src/**/*.js",
+    "doctor": "node ./bin/toti.js doctor",
+    "build": "node -e \"console.log('Source-first package')\""
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "totistack",
+    "vue",
+    "firebase",
+    "framework",
+    "cli",
+    "scaffolding"
+  ],
+  "author": "xbensommo",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.12",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1",
+    "fs-extra": "^11.2.0",
+    "execa": "^8.0.1",
+    "glob": "^10.3.10"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.1",
+    "nodemon": "^3.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xbensommo/totistack.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xbensommo/totistack/issues"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "homepage": "https://totisoft.com/package-totistack"
+}

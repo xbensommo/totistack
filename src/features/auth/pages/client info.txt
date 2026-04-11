@@ -1,0 +1,2 @@
+clients' information, 
+fullnames, date of birth, gender, marital status[single, divored, married], location, phone, password

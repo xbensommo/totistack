@@ -1,0 +1,159 @@
+/**
+ * Inventory Management Feature Manifest
+ * @module features/inventory
+ * @description Enterprise inventory management with stock tracking, purchase orders, and suppliers
+ * @author Microsoft Engineering Team
+ * @date 2026-03-22
+ */
+
+import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider';
+
+export const inventoryItemsCollection = defineCollection({
+  name: 'inventoryItems',
+  shard: { type: 'monthly', field: 'createdAt' },
+  schema: {
+    id: { type: FIELD_TYPES.STRING, required: true },
+    sku: { type: FIELD_TYPES.STRING, required: true, unique: true, filterable: true },
+    name: { type: FIELD_TYPES.STRING, required: true, searchable: true },
+    description: { type: FIELD_TYPES.STRING, searchable: true },
+    category: { type: FIELD_TYPES.STRING, filterable: true },
+    supplierId: { type: FIELD_TYPES.STRING, filterable: true },
+    supplierSku: { type: FIELD_TYPES.STRING },
+    barcode: { type: FIELD_TYPES.STRING },
+    location: { type: FIELD_TYPES.STRING, filterable: true },
+    warehouseId: { type: FIELD_TYPES.STRING, filterable: true },
+    quantity: { type: FIELD_TYPES.NUMBER, required: true, default: 0, filterable: true },
+    reservedQuantity: { type: FIELD_TYPES.NUMBER, default: 0 },
+    availableQuantity: { type: FIELD_TYPES.NUMBER, default: 0 },
+    reorderPoint: { type: FIELD_TYPES.NUMBER, default: 0 },
+    reorderQuantity: { type: FIELD_TYPES.NUMBER, default: 0 },
+    unitCost: { type: FIELD_TYPES.NUMBER, required: true },
+    unitPrice: { type: FIELD_TYPES.NUMBER, required: true },
+    weight: { type: FIELD_TYPES.NUMBER },
+    dimensions: { type: FIELD_TYPES.MAP },
+    status: {
+      type: FIELD_TYPES.STRING,
+      enum: ['active', 'discontinued', 'out_of_stock', 'backorder'],
+      default: 'active'
+    },
+    lastCountedAt: { type: FIELD_TYPES.TIMESTAMP },
+    lastOrderedAt: { type: FIELD_TYPES.TIMESTAMP },
+    metadata: { type: FIELD_TYPES.MAP },
+    createdAt: { type: FIELD_TYPES.TIMESTAMP, readonly: true },
+    updatedAt: { type: FIELD_TYPES.TIMESTAMP }
+  },
+  writableFields: ['name', 'description', 'category', 'supplierId', 'supplierSku', 'barcode', 'location', 'warehouseId', 'quantity', 'reorderPoint', 'reorderQuantity', 'unitCost', 'unitPrice', 'weight', 'dimensions', 'status', 'metadata'],
+  updateableFields: ['quantity', 'reservedQuantity', 'availableQuantity', 'lastCountedAt', 'lastOrderedAt'],
+  indexes: [
+    { fields: ['sku'], unique: true },
+    { fields: ['category', 'status'] },
+    { fields: ['supplierId'] },
+    { fields: ['warehouseId', 'location'] },
+    { fields: ['quantity', 'reorderPoint'] }
+  ],
+  search: { mode: 'token-array', fields: ['name', 'description', 'sku', 'barcode'] }
+});
+
+export const purchaseOrdersCollection = defineCollection({
+  name: 'purchaseOrders',
+  shard: { type: 'monthly', field: 'createdAt' },
+  schema: {
+    id: { type: FIELD_TYPES.STRING, required: true },
+    poNumber: { type: FIELD_TYPES.STRING, required: true, unique: true },
+    supplierId: { type: FIELD_TYPES.STRING, required: true, filterable: true },
+    items: { type: FIELD_TYPES.ARRAY, required: true },
+    status: {
+      type: FIELD_TYPES.STRING,
+      enum: ['draft', 'submitted', 'confirmed', 'shipped', 'received', 'cancelled'],
+      default: 'draft'
+    },
+    totalAmount: { type: FIELD_TYPES.NUMBER, required: true },
+    currency: { type: FIELD_TYPES.STRING, default: 'USD' },
+    expectedDelivery: { type: FIELD_TYPES.TIMESTAMP },
+    receivedAt: { type: FIELD_TYPES.TIMESTAMP },
+    notes: { type: FIELD_TYPES.STRING },
+    metadata: { type: FIELD_TYPES.MAP },
+    createdBy: { type: FIELD_TYPES.STRING },
+    createdAt: { type: FIELD_TYPES.TIMESTAMP, readonly: true },
+    updatedAt: { type: FIELD_TYPES.TIMESTAMP }
+  },
+  writableFields: ['supplierId', 'items', 'expectedDelivery', 'notes', 'metadata'],
+  updateableFields: ['status', 'receivedAt'],
+  indexes: [
+    { fields: ['poNumber'], unique: true },
+    { fields: ['supplierId', 'status'] },
+    { fields: ['status', 'expectedDelivery'] }
+  ]
+});
+
+export const suppliersCollection = defineCollection({
+  name: 'suppliers',
+  schema: {
+    id: { type: FIELD_TYPES.STRING, required: true },
+    name: { type: FIELD_TYPES.STRING, required: true, searchable: true },
+    code: { type: FIELD_TYPES.STRING, required: true, unique: true },
+    contactName: { type: FIELD_TYPES.STRING },
+    email: { type: FIELD_TYPES.STRING },
+    phone: { type: FIELD_TYPES.STRING },
+    address: { type: FIELD_TYPES.MAP },
+    paymentTerms: { type: FIELD_TYPES.STRING },
+    leadTime: { type: FIELD_TYPES.NUMBER },
+    status: { type: FIELD_TYPES.STRING, enum: ['active', 'inactive'], default: 'active' },
+    metadata: { type: FIELD_TYPES.MAP },
+    createdAt: { type: FIELD_TYPES.TIMESTAMP, readonly: true },
+    updatedAt: { type: FIELD_TYPES.TIMESTAMP }
+  },
+  writableFields: ['name', 'contactName', 'email', 'phone', 'address', 'paymentTerms', 'leadTime', 'status', 'metadata'],
+  indexes: [{ fields: ['code'], unique: true }, { fields: ['status'] }],
+  search: { mode: 'token-array', fields: ['name', 'code', 'contactName'] }
+});
+
+export const inventoryTransactionsCollection = defineCollection({
+  name: 'inventoryTransactions',
+  shard: { type: 'monthly', field: 'timestamp' },
+  schema: {
+    id: { type: FIELD_TYPES.STRING, required: true },
+    itemId: { type: FIELD_TYPES.STRING, required: true, filterable: true },
+    type: {
+      type: FIELD_TYPES.STRING,
+      required: true,
+      enum: ['received', 'shipped', 'adjusted', 'returned', 'reserved', 'unreserved']
+    },
+    quantity: { type: FIELD_TYPES.NUMBER, required: true },
+    previousQuantity: { type: FIELD_TYPES.NUMBER },
+    newQuantity: { type: FIELD_TYPES.NUMBER },
+    referenceType: { type: FIELD_TYPES.STRING },
+    referenceId: { type: FIELD_TYPES.STRING },
+    reason: { type: FIELD_TYPES.STRING },
+    timestamp: { type: FIELD_TYPES.TIMESTAMP, required: true },
+    userId: { type: FIELD_TYPES.STRING },
+    metadata: { type: FIELD_TYPES.MAP }
+  },
+  writableFields: ['itemId', 'type', 'quantity', 'referenceType', 'referenceId', 'reason', 'metadata'],
+  indexes: [
+    { fields: ['itemId', 'timestamp'] },
+    { fields: ['type', 'timestamp'] },
+    { fields: ['referenceType', 'referenceId'] }
+  ]
+});
+
+export default {
+  id: 'inventory',
+  name: 'Inventory Management',
+  version: '2.0.0',
+  description: 'Enterprise inventory management with stock tracking, purchase orders, and suppliers',
+  dependencies: { features: ['auth', 'catalog'], apps: ['orders'] },
+  configSchema: {
+    type: 'object',
+    properties: {
+      lowStockAlertThreshold: { type: 'number', default: 5 },
+      enableAutoReorder: { type: 'boolean', default: false },
+      defaultWarehouse: { type: 'string' },
+      trackSerialNumbers: { type: 'boolean', default: false }
+    }
+  },
+  collections: ['inventoryItems', 'purchaseOrders', 'suppliers', 'inventoryTransactions'],
+  services: ['inventoryService', 'stockService', 'purchaseOrderService'],
+  stores: ['inventory'],
+  hooks: ['onStockUpdated', 'onLowStock', 'onPurchaseOrderReceived']
+};

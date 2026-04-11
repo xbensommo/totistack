@@ -1,0 +1,100 @@
+    <!--
+    @file index.html
+    @description Base HTML template for Vue.js projects
+    @date 2026-03-22
+    @author Totistack Team
+    -->
+<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="description" content="{{appName}} - Powered by Totistack" />
+      <title>{{appName}}</title>
+      
+      <!-- Preconnect to external resources -->
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      
+      <!-- Google Fonts will be injected based on branding config -->
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    </head>
+    <body>
+      <div id="app"></div>
+      <script type="module" src="/src/main.js"></script>
+      
+      <div id="whatsapp-root"></div>
+      <script>
+        (function() {
+          const WHATSAPP_NUMBER = "264858140709"; // Replace with your official number
+          const MESSAGE = encodeURIComponent("Hello {{appName}}, I'm visiting your website and would like to inquire about your services.");
+          
+          const root = document.getElementById('whatsapp-root');
+          
+          // Create the button element
+          const button = document.createElement('a');
+          button.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${MESSAGE}`;
+          button.target = "_blank";
+          button.rel = "noopener noreferrer";
+          
+          // Luxury Styling
+          button.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    border-radius: 100px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    color: #0d1b2a;
+    font-family: sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    `;
+          
+          button.innerHTML = `
+    <span style="position: relative; display: flex;">
+    <i class="fab fa-whatsapp" style="font-size: 20px; color: #25D366;"></i>
+    <span style="
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #25D366;
+    border-radius: 50%;
+    border: 2px solid white;
+    "></span>
+    </span>
+    <span class="wa-text" style="opacity: 0.8;">Contact Us</span>
+    `;
+          
+          // Hover Effects
+          button.onmouseover = () => {
+            button.style.transform = "translateY(-5px)";
+            button.style.background = "#ffffff";
+            button.style.boxShadow = "0 25px 45px -10px rgba(0, 0, 0, 0.15)";
+          };
+          button.onmouseout = () => {
+            button.style.transform = "translateY(0)";
+            button.style.background = "rgba(255, 255, 255, 0.8)";
+            button.style.boxShadow = "0 15px 35px -5px rgba(0, 0, 0, 0.1)";
+          };
+          
+          root.appendChild(button);
+        })();
+      </script>
+    </body>
+    </html>

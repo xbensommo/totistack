@@ -1,0 +1,41 @@
+/**
+ * @file firestore.rules
+ * @description Firestore security rules
+ * @date 2026-03-22
+ * @author Totistack Team
+ */
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function hasRole(role) {
+      return request.auth != null && 
+             request.auth.token.roles != null && 
+             role in request.auth.token.roles;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Default rules - will be enhanced by modules
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isOwner(userId) || hasRole('admin'));
+    }
+    
+    // Collections will be added by modules
+    // Each module can extend these rules
+  }
+}
