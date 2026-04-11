@@ -1,0 +1,26 @@
+title: Totistack v2
+description: Modular scaffolding for building real business systems faster.
+remote_theme: just-the-docs/just-the-docs
+plugins:
+  - jekyll-remote-theme
+url: https://xbensommo.github.io
+baseurl: /totistack
+search_enabled: true
+heading_anchors: true
+nav_sort: case_insensitive
+back_to_top: true
+back_to_top_text: Back to top
+footer_content: "Copyright &copy; 2026 Totisoft CC. Totistack v2 documentation."
+aux_links:
+  GitHub Repository:
+    - https://github.com/xbensommo/totistack
+callouts:
+  note:
+    title: Note
+    color: blue
+  warning:
+    title: Warning
+    color: yellow
+  success:
+    title: Good
+    color: green
