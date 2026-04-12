@@ -14,6 +14,7 @@ import { bootstrapApp } from './app/boot/bootstrap.js';
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'vue-sonner/style.css';
+import '@/assets/css/main.css'
 
 /**
  * Vite SSG application factory.

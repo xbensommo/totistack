@@ -1,6 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router';
-import { useHead } from '@vueuse/head';
+import { useHead } from '@unhead/vue';
 
 const router = useRouter();
 const props = defineProps(['code', 'message', 'description']);

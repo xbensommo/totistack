@@ -1,4 +1,7 @@
-/** @file router-helper.js */
+/**
+ * @file router-helper.js
+ * @description Shared enterprise router helpers and route guards for Totistack Vue projects.
+ */
 import { useHead } from '@unhead/vue'
 import accessConfig from '@config/access.config.js'
 
@@ -59,6 +62,16 @@ const defaults = {
   ],
 }
 
+/**
+ * Create the final route list consumed by the router.
+ *
+ * @param {{
+ *   routes?: any[],
+ *   viewLoader?: ((view: string, dir?: string) => any) | null,
+ *   settings?: Record<string, any>,
+ * }} options
+ * @returns {any[]}
+ */
 export function createEnterpriseRoutes({
   routes = [],
   viewLoader = null,
@@ -74,6 +87,97 @@ export function createEnterpriseRoutes({
   return allRoutes.flat()
 }
 
+/**
+ * Determine whether the current route requires the access runtime to be ready.
+ * Public routes without auth, guest, role, or permission requirements should
+ * not trigger auth bootstrap.
+ *
+ * @param {any} to
+ * @returns {boolean}
+ */
+function shouldPrepareAccessRuntime(to) {
+  const requiresAuth = Boolean(to?.meta?.requiresAuth)
+  const guestOnly = Boolean(to?.meta?.guestOnly || to?.meta?.guest)
+  const requiredRoles = Array.isArray(to?.meta?.roles) ? to.meta.roles : []
+  const requiredPermissions = Array.isArray(to?.meta?.permissions) ? to.meta.permissions : []
+
+  return requiresAuth || guestOnly || requiredRoles.length > 0 || requiredPermissions.length > 0
+}
+
+/**
+ * Resolve the current authenticated user from adapters or the store.
+ *
+ * @param {any} store
+ * @param {Record<string, any>} adapters
+ * @returns {any}
+ */
+function getResolvedCurrentUser(store, adapters) {
+  return adapters.getCurrentUser ? adapters.getCurrentUser(store) : store.currentUser
+}
+
+/**
+ * Evaluate route role access.
+ *
+ * @param {any} store
+ * @param {Record<string, any>} adapters
+ * @param {string[]} requiredRoles
+ * @param {string | undefined} routeName
+ * @returns {boolean}
+ */
+function isRoleAllowed(store, adapters, requiredRoles, routeName) {
+  if (requiredRoles.length === 0) {
+    return true
+  }
+
+  if (typeof adapters.checkRole === 'function') {
+    return adapters.checkRole(store, requiredRoles, routeName)
+  }
+
+  if (typeof adapters.checkPermission === 'function') {
+    return adapters.checkPermission(store, requiredRoles, routeName)
+  }
+
+  if (typeof store.hasAnyRole === 'function') {
+    return store.hasAnyRole(requiredRoles)
+  }
+
+  if (typeof store.hasRole === 'function') {
+    return requiredRoles.some((role) => store.hasRole(role))
+  }
+
+  return true
+}
+
+/**
+ * Evaluate route permission access.
+ *
+ * @param {any} store
+ * @param {string[]} requiredPermissions
+ * @returns {boolean}
+ */
+function isPermissionAllowed(store, requiredPermissions) {
+  if (requiredPermissions.length === 0) {
+    return true
+  }
+
+  if (typeof store.hasPermission === 'function') {
+    return requiredPermissions.every((permission) => store.hasPermission(permission))
+  }
+
+  return true
+}
+
+/**
+ * Install the shared router guards.
+ *
+ * @param {any} router
+ * @param {{
+ *   useStore: () => any,
+ *   settings?: Record<string, any>,
+ *   adapters?: Record<string, any>,
+ * }} options
+ * @returns {any}
+ */
 export function installEnterpriseRouterGuards(
   router,
   {
@@ -94,14 +198,6 @@ export function installEnterpriseRouterGuards(
       adapters.loading(store, true)
     }
 
-    if (typeof store.initAccessRuntime === 'function') {
-      await store.initAccessRuntime()
-    }
-
-    if (typeof store.waitForAccessReady === 'function') {
-      await store.waitForAccessReady()
-    }
-
     const isInitialLoad = from.matched.length === 0
     const isSameRoute =
       !isInitialLoad &&
@@ -116,9 +212,19 @@ export function installEnterpriseRouterGuards(
       return next(false)
     }
 
+    if (shouldPrepareAccessRuntime(to)) {
+      if (typeof store.initAccessRuntime === 'function') {
+        await store.initAccessRuntime()
+      }
+
+      if (typeof store.waitForAccessReady === 'function') {
+        await store.waitForAccessReady()
+      }
+    }
+
     const requiresAuth = Boolean(to.meta?.requiresAuth)
     const guestOnly = Boolean(to.meta?.guestOnly || to.meta?.guest)
-    const currentUser = adapters.getCurrentUser ? adapters.getCurrentUser(store) : store.currentUser
+    const currentUser = getResolvedCurrentUser(store, adapters)
     const isAuthenticated = Boolean(currentUser)
 
     if (requiresAuth && !isAuthenticated) {
@@ -145,16 +251,8 @@ export function installEnterpriseRouterGuards(
     const requiredPermissions = Array.isArray(to.meta?.permissions) ? to.meta.permissions : []
 
     if (shouldCheckRbac && (requiredRoles.length > 0 || requiredPermissions.length > 0)) {
-      const roleAllowed = requiredRoles.length === 0 || (adapters.checkPermission
-        ? adapters.checkPermission(store, requiredRoles, to.name)
-        : true)
-
-      const permissionAllowed = requiredPermissions.length === 0 || requiredPermissions.every((permission) => {
-        if (typeof store.hasPermission === 'function') {
-          return store.hasPermission(permission)
-        }
-        return true
-      })
+      const roleAllowed = isRoleAllowed(store, adapters, requiredRoles, to.name)
+      const permissionAllowed = isPermissionAllowed(store, requiredPermissions)
 
       if (!roleAllowed || !permissionAllowed) {
         if (adapters.loading) {
@@ -223,6 +321,12 @@ export function installEnterpriseRouterGuards(
   return router
 }
 
+/**
+ * Create a lazy view helper that matches the project view folder contract.
+ *
+ * @param {(view: string, dir?: string) => any} pathResolver
+ * @returns {(view: string, dir?: string) => () => any}
+ */
 export function createLazyHelper(pathResolver) {
   return (view, dir) => () => pathResolver(view, dir)
 }

@@ -1,127 +1,277 @@
 /**
- * Bookings Collection Definition
- * @module apps/booking/collections/bookings
- * @description Collection definition for bookings with normalized schema
- * @author Totistack Team
- * @date 2026-03-22
+ * @file booking/collections/bookings.collection.js
+ * @description Booking collection definition aligned with @xbensommo/shard-provider.
  */
 
-export default {
+import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider'
+
+/**
+ * Booking records.
+ *
+ * Notes:
+ * - The root application provides the single shard provider instance.
+ * - This file declares the collection only; it does not create actions.
+ */
+export default defineCollection({
   name: 'bookings',
-  description: 'Booking appointments and reservations',
-  
+  shard: { type: 'monthly' },
   schema: {
-    id: { type: 'string', required: true, description: 'Booking unique identifier' },
-    bookingNumber: { type: 'string', required: true, unique: true, description: 'Human-readable booking number' },
-    clientId: { type: 'string', required: true, references: 'clients', description: 'Reference to client' },
-    userId: { type: 'string', required: true, references: 'users', description: 'User who created booking' },
-    
-    // Resource information
-    resourceId: { type: 'string', required: true, references: 'resources', description: 'Booked resource' },
-    resourceType: { type: 'string', required: true, description: 'Type of resource (room, equipment, staff, etc.)' },
-    
-    // Time slots
-    startTime: { type: 'date', required: true, description: 'Booking start time' },
-    endTime: { type: 'date', required: true, description: 'Booking end time' },
-    duration: { type: 'number', required: true, description: 'Duration in minutes' },
-    timezone: { type: 'string', default: 'UTC', description: 'Timezone of booking' },
-    
-    // Booking status workflow
-    status: {
-      type: 'string',
+    bookingNumber: {
+      type: FIELD_TYPES.STRING,
       required: true,
-      enum: ['pending', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show'],
-      default: 'pending',
-      description: 'Current booking status'
+      sortable: true,
+      filterable: true,
+      searchable: true,
     },
-    
-    // Payment information
-    amount: { type: 'number', required: true, min: 0, description: 'Booking amount' },
-    currency: { type: 'string', default: 'USD', description: 'Currency code' },
+    clientId: {
+      type: FIELD_TYPES.STRING,
+      required: true,
+      filterable: true,
+    },
+    customerName: {
+      type: FIELD_TYPES.STRING,
+      required: true,
+      searchable: true,
+      sortable: true,
+    },
+    customerEmail: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      searchable: true,
+    },
+    customerPhone: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      searchable: true,
+    },
+    resourceId: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    resourceType: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+      sortable: true,
+    },
+    title: {
+      type: FIELD_TYPES.STRING,
+      required: true,
+      searchable: true,
+      sortable: true,
+    },
+    description: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      searchable: true,
+    },
+    notes: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+    },
+    specialRequests: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+    },
+    timezone: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    startTime: {
+      type: FIELD_TYPES.TIMESTAMP,
+      required: true,
+      sortable: true,
+      filterable: true,
+    },
+    endTime: {
+      type: FIELD_TYPES.TIMESTAMP,
+      required: true,
+      sortable: true,
+      filterable: true,
+    },
+    durationMinutes: {
+      type: FIELD_TYPES.NUMBER,
+      required: true,
+      sortable: true,
+      filterable: true,
+    },
+    status: {
+      type: FIELD_TYPES.STRING,
+      required: true,
+      enum: ['pending', 'confirmed', 'checked_in', 'completed', 'cancelled', 'no_show'],
+      filterable: true,
+      sortable: true,
+    },
+    amount: {
+      type: FIELD_TYPES.NUMBER,
+      required: false,
+      filterable: true,
+      sortable: true,
+    },
+    currency: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
     paymentStatus: {
-      type: 'string',
+      type: FIELD_TYPES.STRING,
+      required: false,
       enum: ['pending', 'paid', 'failed', 'refunded'],
-      default: 'pending',
-      description: 'Payment status'
+      filterable: true,
     },
-    paymentId: { type: 'string', description: 'Payment reference' },
-    
-    // Attendee information
     attendees: {
-      type: 'array',
-      description: 'List of attendees',
-      items: {
-        type: 'object',
-        properties: {
-          name: { type: 'string', required: true },
-          email: { type: 'string', format: 'email' },
-          phone: { type: 'string' },
-          type: { type: 'string', enum: ['primary', 'guest'] }
-        }
-      }
+      type: FIELD_TYPES.ARRAY,
+      required: false,
     },
-    
-    // Booking details
-    title: { type: 'string', required: true, description: 'Booking title' },
-    description: { type: 'string', description: 'Booking description' },
-    notes: { type: 'string', description: 'Additional notes' },
-    specialRequests: { type: 'string', description: 'Special requests from client' },
-    
-    // Confirmation data
-    confirmedAt: { type: 'date', description: 'Confirmation timestamp' },
-    confirmedBy: { type: 'string', references: 'users', description: 'User who confirmed' },
-    confirmationSent: { type: 'boolean', default: false, description: 'Confirmation email sent' },
-    
-    // Reminder configuration
     reminders: {
-      type: 'array',
-      description: 'Scheduled reminders',
-      items: {
-        type: 'object',
-        properties: {
-          type: { type: 'string', enum: ['email', 'sms', 'push'] },
-          time: { type: 'date' },
-          sent: { type: 'boolean', default: false }
-        }
-      }
+      type: FIELD_TYPES.ARRAY,
+      required: false,
     },
-    
-    // Cancellation data
-    cancelledAt: { type: 'date', description: 'Cancellation timestamp' },
-    cancelledBy: { type: 'string', references: 'users', description: 'User who cancelled' },
-    cancellationReason: { type: 'string', description: 'Reason for cancellation' },
-    cancellationFee: { type: 'number', default: 0, description: 'Cancellation fee charged' },
-    
-    // Check-in/out data
-    checkedInAt: { type: 'date', description: 'Check-in timestamp' },
-    checkedOutAt: { type: 'date', description: 'Check-out timestamp' },
-    
-    // Rating and feedback
-    rating: { type: 'number', min: 1, max: 5, description: 'Client rating' },
-    feedback: { type: 'string', description: 'Client feedback' },
-    
-    // Timestamps
-    createdAt: { type: 'date', required: true, description: 'Creation timestamp' },
-    updatedAt: { type: 'date', required: true, description: 'Last update timestamp' }
+    confirmedAt: {
+      type: FIELD_TYPES.TIMESTAMP,
+      required: false,
+      filterable: true,
+    },
+    confirmedBy: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    cancelledAt: {
+      type: FIELD_TYPES.TIMESTAMP,
+      required: false,
+      filterable: true,
+    },
+    cancelledBy: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    cancellationReason: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+    },
+    checkedInAt: {
+      type: FIELD_TYPES.TIMESTAMP,
+      required: false,
+      filterable: true,
+    },
+    checkedOutAt: {
+      type: FIELD_TYPES.TIMESTAMP,
+      required: false,
+      filterable: true,
+    },
+    rating: {
+      type: FIELD_TYPES.NUMBER,
+      required: false,
+      filterable: true,
+      sortable: true,
+    },
+    feedback: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+    },
+    createdAt: {
+      type: FIELD_TYPES.TIMESTAMP,
+      readonly: true,
+      system: true,
+      sortable: true,
+      filterable: true,
+    },
+    updatedAt: {
+      type: FIELD_TYPES.TIMESTAMP,
+      readonly: true,
+      system: true,
+      sortable: true,
+      filterable: true,
+    },
+    createdBy: {
+      type: FIELD_TYPES.STRING,
+      readonly: true,
+      system: true,
+      filterable: true,
+    },
   },
-  
-  indexes: [
-    { fields: ['bookingNumber'], unique: true },
-    { fields: ['clientId', 'startTime'] },
-    { fields: ['resourceId', 'startTime', 'endTime'] },
-    { fields: ['status', 'startTime'] },
-    { fields: ['startTime'], order: 'desc' }
+  writableFields: [
+    'bookingNumber',
+    'clientId',
+    'customerName',
+    'customerEmail',
+    'customerPhone',
+    'resourceId',
+    'resourceType',
+    'title',
+    'description',
+    'notes',
+    'specialRequests',
+    'timezone',
+    'startTime',
+    'endTime',
+    'durationMinutes',
+    'status',
+    'amount',
+    'currency',
+    'paymentStatus',
+    'attendees',
+    'reminders',
+    'confirmedAt',
+    'confirmedBy',
+    'cancelledAt',
+    'cancelledBy',
+    'cancellationReason',
+    'checkedInAt',
+    'checkedOutAt',
+    'rating',
+    'feedback',
   ],
-  
-  hooks: {
-    beforeCreate: ['validateAvailability', 'calculateDuration', 'generateBookingNumber'],
-    afterCreate: ['sendConfirmation', 'scheduleReminders'],
-    beforeUpdate: ['validateStatusTransition', 'checkAvailabilityIfReschedule']
+  updateableFields: [
+    'clientId',
+    'customerName',
+    'customerEmail',
+    'customerPhone',
+    'resourceId',
+    'resourceType',
+    'title',
+    'description',
+    'notes',
+    'specialRequests',
+    'timezone',
+    'startTime',
+    'endTime',
+    'durationMinutes',
+    'status',
+    'amount',
+    'currency',
+    'paymentStatus',
+    'attendees',
+    'reminders',
+    'confirmedAt',
+    'confirmedBy',
+    'cancelledAt',
+    'cancelledBy',
+    'cancellationReason',
+    'checkedInAt',
+    'checkedOutAt',
+    'rating',
+    'feedback',
+  ],
+  indexes: [
+    { fields: ['clientId', 'startTime'] },
+    { fields: ['status', 'startTime'] },
+    { fields: ['resourceId', 'startTime'] },
+    { fields: ['createdBy', 'createdAt'] },
+    { fields: ['paymentStatus', 'startTime'] },
+  ],
+  search: {
+    mode: 'token-array',
+    fields: ['bookingNumber', 'customerName', 'customerEmail', 'title', 'description'],
   },
-  
-  security: {
-    read: { roles: ['admin', 'manager'], owners: ['userId', 'clientId'] },
-    write: { roles: ['admin', 'manager'] },
-    delete: { roles: ['admin'] }
-  }
-};
+  rules: {
+    read: 'auth',
+    create: 'auth',
+    update: 'ownerOrAdmin',
+    delete: 'ownerOrAdmin',
+  },
+})

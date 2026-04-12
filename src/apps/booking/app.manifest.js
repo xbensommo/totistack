@@ -1,36 +1,31 @@
 /**
- * Booking App Manifest
- * @module apps/booking
- * @description Booking system for appointments, reservations, and resource scheduling
- * @author Totistack Team
- * @date 2026-03-22
+ * @file booking/app.manifest.js
+ * @description Declarative Booking app manifest for the latest Totistack assembly flow.
+ *
+ * This app is intentionally declarative:
+ * - it does not create providers
+ * - it does not register routes at runtime
+ * - it does not own root auth/rbac state
+ *
+ * The generator is expected to discover this manifest and assemble the app
+ * through src/generated/* registries.
  */
 
 export default {
   id: 'booking',
+  type: 'app',
   name: 'Booking System',
-  version: '2.0.0',
-  description: 'Complete booking management with calendar, availability, and scheduling',
-  
+  version: '3.0.0',
+  description: 'Booking management for appointments, reservations, availability, and scheduling.',
   dependencies: {
-    features: ['auth', 'rbac', 'media', 'integrations'],
-    apps: ['client-records']
+    features: ['auth', 'rbac'],
+    apps: ['client-records'],
   },
-  
   navigation: {
-    icon: 'Calendar',
-    priority: 3,
-    roles: ['admin', 'manager', 'user']
+    icon: 'CalendarDays',
+    label: 'Bookings',
+    priority: 35,
+    roles: ['admin', 'manager', 'user'],
   },
-  
-  collections: ['bookings', 'resources', 'availability', 'bookingHistory', 'reminders'],
-  
-  routes: [
-    { path: '/bookings', name: 'bookings', component: 'BookingsListPage', meta: { requiresAuth: true } },
-    { path: '/bookings/calendar', name: 'booking-calendar', component: 'BookingCalendarPage', meta: { requiresAuth: true } },
-    { path: '/bookings/:id', name: 'booking-detail', component: 'BookingDetailPage', meta: { requiresAuth: true } },
-    { path: '/booking/new', name: 'booking-create', component: 'BookingCreatePage', meta: { requiresAuth: true } }
-  ],
-  
-  hooks: ['onBookingCreated', 'onBookingConfirmed', 'onBookingCancelled', 'onReminderSent']
-};
+  collections: ['bookings'],
+}

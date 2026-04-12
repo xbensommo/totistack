@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "node bin/toti.js",
-    "test": "node -e \"console.log('No tests yet')\"",
+    "test": "node --test tests/*/*.test.js",
     "lint": "eslint src/**/*.js",
     "format": "prettier --write src/**/*.js",
     "doctor": "node ./bin/toti.js doctor",

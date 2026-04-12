@@ -1,7 +1,12 @@
-# Media
+# Media feature
 
-Installable Totistack feature.
+Enterprise-ready starter feature for:
 
-## Collections
+- media asset metadata
+- folders
+- upload workflow shells
+- starter media library UI
 
-- `mediaFiles`\n
+## Production note
+
+The starter service manages metadata records only. Plug actual binary uploads into Firebase Storage, S3, R2, or your preferred storage provider at project level.

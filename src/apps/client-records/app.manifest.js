@@ -1,46 +1,25 @@
 /**
- * Client Records App Manifest
- * @module apps/client-records
- * @description Client relationship management with normalized data schema
- * @author Totistack Team
- * @date 2026-03-22
+ * @file app.manifest.js
+ * @description Declarative manifest for the Client Records Totistack app.
  */
 
 export default {
   id: 'client-records',
+  type: 'app',
   name: 'Client Records',
-  version: '2.0.0',
-  description: 'Comprehensive client management with normalized relational data structure',
-  
+  version: '3.0.0',
+  description:
+    'Centralized client records with contacts, activities, notes, and reusable UI starters.',
   dependencies: {
-    features: ['auth', 'rbac', 'media'],
-    apps: []
+    features: ['auth', 'rbac'],
+    apps: [],
   },
-  
   navigation: {
+    label: 'Clients',
     icon: 'Users',
-    priority: 1,
-    roles: ['admin', 'manager']
+    priority: 20,
+    requiresAuth: true,
+    roles: ['admin', 'manager', 'agent'],
   },
-  
-  collections: [
-    'clients',
-    'clientContacts',
-    'clientAddresses',
-    'clientPreferences',
-    'clientNotes',
-    'clientActivities',
-    'clientSegments',
-    'clientTags'
-  ],
-  
-  routes: [
-    { path: '/clients', name: 'clients', component: 'ClientsListPage', meta: { requiresAuth: true } },
-    { path: '/clients/:id', name: 'client-detail', component: 'ClientDetailPage', meta: { requiresAuth: true } },
-    { path: '/clients/:id/edit', name: 'client-edit', component: 'ClientEditPage', meta: { requiresAuth: true, permissions: ['client:update'] } },
-    { path: '/clients/new', name: 'client-create', component: 'ClientCreatePage', meta: { requiresAuth: true, permissions: ['client:create'] } },
-    { path: '/segments', name: 'segments', component: 'SegmentsPage', meta: { requiresAuth: true, permissions: ['segment:read'] } }
-  ],
-  
-  hooks: ['onClientCreated', 'onClientUpdated', 'onClientMerged', 'onActivityLogged']
-};
+  collections: ['clients', 'clientContacts', 'clientActivities', 'clientNotes'],
+}

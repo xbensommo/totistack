@@ -1,131 +1,243 @@
 /**
  * @file dependency-resolver.js
- * @description Resolves dependencies between apps and features.
- * @date 2026-03-22
- * @author Totistack Team
- * @changes
- * - ENHANCED: Added better error messages with context
- * - ADDED: Circular dependency detection
- * - ADDED: Dependency validation before resolution
+ * @description Resolves app and feature dependencies for Totistack project assembly.
  */
 
-import { ResolveError } from '../errors/index.js';
-import { logger } from '../utils/index.js';
+import { ResolveError } from '../errors/index.js'
+import { logger } from '../utils/index.js'
+
+/**
+ * Normalize a dependency declaration into explicit app and feature arrays.
+ *
+ * Supported legacy and current shapes:
+ * - manifest.features
+ * - manifest.requiresApps
+ * - manifest.dependencies.features
+ * - manifest.dependencies.apps
+ *
+ * @param {object | undefined | null} manifest
+ * @returns {{ apps: string[], features: string[] }}
+ */
+function normalizeManifestDependencies(manifest) {
+  const normalized = {
+    apps: new Set(),
+    features: new Set(),
+  }
+
+  if (!manifest || typeof manifest !== 'object') {
+    return {
+      apps: [],
+      features: [],
+    }
+  }
+
+  const dependencies = manifest.dependencies && typeof manifest.dependencies === 'object'
+    ? manifest.dependencies
+    : {}
+
+  const appDependencies = [
+    ...(Array.isArray(dependencies.apps) ? dependencies.apps : []),
+    ...(Array.isArray(manifest.requiresApps) ? manifest.requiresApps : []),
+  ]
+
+  const featureDependencies = [
+    ...(Array.isArray(dependencies.features) ? dependencies.features : []),
+    ...(Array.isArray(manifest.features) ? manifest.features : []),
+    ...(Array.isArray(manifest.requiresFeatures) ? manifest.requiresFeatures : []),
+  ]
+
+  for (const appId of appDependencies) {
+    if (typeof appId === 'string' && appId.trim()) {
+      normalized.apps.add(appId.trim())
+    }
+  }
+
+  for (const featureId of featureDependencies) {
+    if (typeof featureId === 'string' && featureId.trim()) {
+      normalized.features.add(featureId.trim())
+    }
+  }
+
+  return {
+    apps: [...normalized.apps],
+    features: [...normalized.features],
+  }
+}
 
 /**
  * Resolve all dependencies for a set of selected apps and features.
- * @param {string[]} selectedApps - List of app IDs.
- * @param {string[]} selectedFeatures - List of feature IDs.
- * @param {AppRegistry} appRegistry - App registry.
- * @param {FeatureRegistry} featureRegistry - Feature registry.
- * @returns {{apps: string[], features: string[]}} Expanded sets including dependencies.
+ *
+ * The resolver expands transitive dependencies until no new items are added.
+ * Missing dependencies are logged and skipped so generation can continue when
+ * a manifest references an optional or not-yet-installed module.
+ *
+ * @param {string[]} selectedApps
+ * @param {string[]} selectedFeatures
+ * @param {{ get(id: string): any, getAll(): Array<{ id: string }>, has?: (id: string) => boolean }} appRegistry
+ * @param {{ get(id: string): any, getAll(): Array<{ id: string }>, has?: (id: string) => boolean }} featureRegistry
+ * @returns {{ apps: string[], features: string[] }}
  * @throws {ResolveError}
  */
 export function resolveDependencies(selectedApps, selectedFeatures, appRegistry, featureRegistry) {
-  const resolvedApps = new Set(selectedApps);
-  const resolvedFeatures = new Set(selectedFeatures);
-  let changed;
-  let iteration = 0;
-  const maxIterations = 100; // Prevent infinite loops
-  
-  logger.debug(`Resolving dependencies for apps: [${Array.from(selectedApps).join(', ')}], features: [${Array.from(selectedFeatures).join(', ')}]`);
-  
+  const resolvedApps = new Set(Array.isArray(selectedApps) ? selectedApps : [])
+  const resolvedFeatures = new Set(Array.isArray(selectedFeatures) ? selectedFeatures : [])
+  let changed = false
+  let iteration = 0
+  const maxIterations = 100
+
+  logger.debug(
+    `Resolving dependencies for apps: [${[...resolvedApps].join(', ')}], features: [${[...resolvedFeatures].join(', ')}]`,
+  )
+
   do {
-    changed = false;
-    iteration++;
-    
+    changed = false
+    iteration += 1
+
     if (iteration > maxIterations) {
-      throw new ResolveError(`Dependency resolution exceeded max iterations (${maxIterations}). Possible circular dependency.`);
+      throw new ResolveError(
+        `Dependency resolution exceeded max iterations (${maxIterations}). Possible circular dependency.`,
+      )
     }
-    
-    // Add features required by apps
-    for (const appId of resolvedApps) {
-      const app = appRegistry.get(appId);
-      
+
+    for (const appId of [...resolvedApps]) {
+      const app = appRegistry.get(appId)
+
       if (!app) {
-        // Provide helpful error with available apps
-        const availableApps = appRegistry.getAll().map(a => a.id);
-        logger.error(`App '${appId}' not found. Available apps: ${availableApps.join(', ') || 'none'}`);
-        throw new ResolveError(`App not found: ${appId}. Available apps: ${availableApps.join(', ') || 'none'}`);
+        const availableApps = appRegistry.getAll().map((entry) => entry.id)
+        logger.error(`App '${appId}' not found. Available apps: ${availableApps.join(', ') || 'none'}`)
+        throw new ResolveError(`App not found: ${appId}. Available apps: ${availableApps.join(', ') || 'none'}`)
       }
-      
-      const requiredFeatures = app.manifest.features || [];
-      
-      for (const featId of requiredFeatures) {
-        // Verify feature exists
-        if (!featureRegistry.has(featId)) {
-          const availableFeatures = featureRegistry.getAll().map(f => f.id);
-          logger.warn(`Feature '${featId}' required by app '${appId}' not found. Available: ${availableFeatures.join(', ') || 'none'}`);
-          // Continue without throwing - feature might be optional
+
+      const dependencies = normalizeManifestDependencies(app.manifest)
+
+      for (const requiredAppId of dependencies.apps) {
+        if (!appRegistry.get(requiredAppId)) {
+          const availableApps = appRegistry.getAll().map((entry) => entry.id)
+          logger.warn(
+            `App '${requiredAppId}' required by app '${appId}' not found. Available apps: ${availableApps.join(', ') || 'none'}`,
+          )
+          continue
         }
-        
-        if (!resolvedFeatures.has(featId)) {
-          resolvedFeatures.add(featId);
-          changed = true;
-          logger.debug(`Added feature ${featId} required by app ${appId}`);
+
+        if (!resolvedApps.has(requiredAppId)) {
+          resolvedApps.add(requiredAppId)
+          changed = true
+          logger.debug(`Added app ${requiredAppId} required by app ${appId}`)
+        }
+      }
+
+      for (const requiredFeatureId of dependencies.features) {
+        if (!featureRegistry.get(requiredFeatureId)) {
+          const availableFeatures = featureRegistry.getAll().map((entry) => entry.id)
+          logger.warn(
+            `Feature '${requiredFeatureId}' required by app '${appId}' not found. Available features: ${availableFeatures.join(', ') || 'none'}`,
+          )
+          continue
+        }
+
+        if (!resolvedFeatures.has(requiredFeatureId)) {
+          resolvedFeatures.add(requiredFeatureId)
+          changed = true
+          logger.debug(`Added feature ${requiredFeatureId} required by app ${appId}`)
         }
       }
     }
-    
-    // Add apps required by features (if feature manifest includes app dependencies)
-    for (const featureId of resolvedFeatures) {
-      const feature = featureRegistry.get(featureId);
-      
-      if (feature && feature.manifest.requiresApps) {
-        const requiredApps = feature.manifest.requiresApps;
-        
-        for (const appId of requiredApps) {
-          if (!resolvedApps.has(appId)) {
-            resolvedApps.add(appId);
-            changed = true;
-            logger.debug(`Added app ${appId} required by feature ${featureId}`);
-          }
+
+    for (const featureId of [...resolvedFeatures]) {
+      const feature = featureRegistry.get(featureId)
+
+      if (!feature) {
+        const availableFeatures = featureRegistry.getAll().map((entry) => entry.id)
+        logger.warn(
+          `Feature '${featureId}' not found during dependency resolution. Available features: ${availableFeatures.join(', ') || 'none'}`,
+        )
+        continue
+      }
+
+      const dependencies = normalizeManifestDependencies(feature.manifest)
+
+      for (const requiredAppId of dependencies.apps) {
+        if (!appRegistry.get(requiredAppId)) {
+          const availableApps = appRegistry.getAll().map((entry) => entry.id)
+          logger.warn(
+            `App '${requiredAppId}' required by feature '${featureId}' not found. Available apps: ${availableApps.join(', ') || 'none'}`,
+          )
+          continue
+        }
+
+        if (!resolvedApps.has(requiredAppId)) {
+          resolvedApps.add(requiredAppId)
+          changed = true
+          logger.debug(`Added app ${requiredAppId} required by feature ${featureId}`)
+        }
+      }
+
+      for (const requiredFeatureId of dependencies.features) {
+        if (!featureRegistry.get(requiredFeatureId)) {
+          const availableFeatures = featureRegistry.getAll().map((entry) => entry.id)
+          logger.warn(
+            `Feature '${requiredFeatureId}' required by feature '${featureId}' not found. Available features: ${availableFeatures.join(', ') || 'none'}`,
+          )
+          continue
+        }
+
+        if (!resolvedFeatures.has(requiredFeatureId)) {
+          resolvedFeatures.add(requiredFeatureId)
+          changed = true
+          logger.debug(`Added feature ${requiredFeatureId} required by feature ${featureId}`)
         }
       }
     }
-    
-  } while (changed);
-  
+  } while (changed)
+
   const result = {
-    apps: Array.from(resolvedApps),
-    features: Array.from(resolvedFeatures),
-  };
-  
-  logger.debug(`Dependency resolution complete: ${result.apps.length} apps, ${result.features.length} features`);
-  
-  return result;
+    apps: [...resolvedApps],
+    features: [...resolvedFeatures],
+  }
+
+  logger.debug(`Dependency resolution complete: ${result.apps.length} apps, ${result.features.length} features`)
+
+  return result
 }
 
 /**
- * Validate that all resolved apps and features exist in registries
- * @param {string[]} appIds - App IDs to validate
- * @param {string[]} featureIds - Feature IDs to validate
- * @param {AppRegistry} appRegistry - App registry
- * @param {FeatureRegistry} featureRegistry - Feature registry
- * @returns {boolean} True if all exist
+ * Validate that all resolved apps and features exist in the registries.
+ *
+ * @param {string[]} appIds
+ * @param {string[]} featureIds
+ * @param {{ has?: (id: string) => boolean, get?: (id: string) => any }} appRegistry
+ * @param {{ has?: (id: string) => boolean, get?: (id: string) => any }} featureRegistry
+ * @returns {boolean}
  * @throws {ResolveError}
  */
 export function validateDependencies(appIds, featureIds, appRegistry, featureRegistry) {
-  const missingApps = [];
-  const missingFeatures = [];
-  
+  const missingApps = []
+  const missingFeatures = []
+
   for (const appId of appIds) {
-    if (!appRegistry.has(appId)) {
-      missingApps.push(appId);
+    const exists = typeof appRegistry.has === 'function' ? appRegistry.has(appId) : Boolean(appRegistry.get?.(appId))
+    if (!exists) {
+      missingApps.push(appId)
     }
   }
-  
+
   for (const featureId of featureIds) {
-    if (!featureRegistry.has(featureId)) {
-      missingFeatures.push(featureId);
+    const exists = typeof featureRegistry.has === 'function'
+      ? featureRegistry.has(featureId)
+      : Boolean(featureRegistry.get?.(featureId))
+
+    if (!exists) {
+      missingFeatures.push(featureId)
     }
   }
-  
+
   if (missingApps.length > 0 || missingFeatures.length > 0) {
     throw new ResolveError(
-      `Missing dependencies: ${missingApps.length > 0 ? `Apps: ${missingApps.join(', ')}` : ''}${missingApps.length > 0 && missingFeatures.length > 0 ? '; ' : ''}${missingFeatures.length > 0 ? `Features: ${missingFeatures.join(', ')}` : ''}`
-    );
+      `Missing dependencies: ${missingApps.length > 0 ? `Apps: ${missingApps.join(', ')}` : ''}${missingApps.length > 0 && missingFeatures.length > 0 ? '; ' : ''}${missingFeatures.length > 0 ? `Features: ${missingFeatures.join(', ')}` : ''}`,
+    )
   }
-  
-  return true;
+
+  return true
 }
+
+export { normalizeManifestDependencies }

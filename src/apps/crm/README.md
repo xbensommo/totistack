@@ -1,21 +1,21 @@
-# CRM App
+# CRM App Module
 
-This CRM package was updated to match the latest Totistack assembly model.
+Production-ready CRM starter module aligned with the latest Totistack generated assembly structure.
 
-## What changed
+## What this module contributes
 
-- Declarative `manifest.js`, `routes.js`, and `services.js`
-- Collection definitions migrated to shard-provider `defineCollection(...)`
-- Old runtime `initialize()` pattern removed from the main integration path
-- Backward-compatible file re-exports kept for older references
-- Generic starter pages added so routes resolve cleanly
+- `app.manifest.js` for declarative module metadata
+- `routes.js` for lazy route contribution
+- shard-provider collection definitions for:
+  - `crm_leads`
+  - `crm_opportunities`
+  - `crm_activities`
+- `services/crmService.js` for root-store-driven CRM operations
+- generic starter pages and components that are easy to extend
 
-## Integration model
+## Architecture notes
 
-This app now contributes only:
-
-- routes
-- services
-- collections
-
-The Totistack root app owns provider creation, generated assembly, auth, RBAC, and router bootstrapping.
+- The root application owns auth, RBAC, provider setup, and store bootstrapping.
+- This CRM app does **not** self-register routes or stores.
+- Collection actions are consumed from the generated collection registry through the root store.
+- RBAC checks automatically respect the root store runtime toggle.

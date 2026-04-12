@@ -14,8 +14,8 @@ const sessions = defineCollection({
     createdAt: { type: FIELD_TYPES.TIMESTAMP, readonly: true, sortable: true },
     updatedAt: { type: FIELD_TYPES.TIMESTAMP, readonly: true },
   },
-  writableFields: ['userId', 'userAgent', 'provider', 'isActive', 'createdAt', 'updatedAt'],
-  updateableFields: ['userAgent', 'provider', 'isActive', 'updatedAt'],
+  writableFields: ['userId', 'userAgent', 'provider', 'isActive', 'lastActivityAt', 'isActive','createdAt', 'updatedAt'],
+  updateableFields: ['userAgent', 'provider', 'isActive', 'updatedAt','lastActivityAt', 'isActive'],
   indexes: [{ fields: ['userId', 'createdAt'] }],
 });
 

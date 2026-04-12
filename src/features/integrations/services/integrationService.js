@@ -1,529 +1,170 @@
+/**
+ * @file integrations/services/integrationService.js
+ * @description Root-store compatible service factory for the integrations feature.
+ */
+import { useAppStore } from '@/stores/appStore'
+import {
+  assertAccess,
+  createId,
+  createLegacyService,
+  fetchCollectionItems,
+  getCollectionActions,
+  normalizeError,
+  runAction,
+} from '../../shared/featureToolkit.js'
+
+const BUILT_IN_PROVIDERS = Object.freeze([
+  { id: 'stripe', name: 'Stripe', category: 'payments' },
+  { id: 'sendgrid', name: 'SendGrid', category: 'email' },
+  { id: 'slack', name: 'Slack', category: 'messaging' },
+  { id: 'twilio', name: 'Twilio', category: 'sms' },
+  { id: 'openai', name: 'OpenAI', category: 'ai' },
+])
 
 /**
- * Integration Service
- * @module features/integration/services/integrationService
- * @description Core service for managing third-party integrations
- * @author Totistack Team
- * @date 2026-03-22
+ * Create the integrations feature service.
+ *
+ * @param {object} context
+ * @returns {object}
  */
+export function createIntegrationsService({ appStore, access, config = {} } = {}) {
+  const store = appStore || useAppStore()
+  const featureAccess = access || store?.access || null
+  const integrationActions = getCollectionActions(store, 'integrations')
+  const webhookActions = getCollectionActions(store, 'integrationWebhooks')
+  const logActions = getCollectionActions(store, 'integrationLogs')
+  const settings = { allowedProviders: BUILT_IN_PROVIDERS.map((item) => item.id), ...config }
 
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, Timestamp } from 'firebase/firestore';
-import { getFirestore } from 'firebase/firestore';
+  async function listProviders() {
+    return BUILT_IN_PROVIDERS.filter((item) => settings.allowedProviders.includes(item.id))
+  }
 
-/**
- * Integration Service Class
- */
-export class IntegrationService {
-  /** @type {Object} Firestore instance */
-  #db = null;
-  
-  /** @type {Object} Auth service */
-  #authService = null;
-  
-  /** @type {Object} RBAC service */
-  #rbacService = null;
-  
-  /** @type {Object} Configuration */
-  #config = null;
-  
-  /** @type {Map} Provider definitions */
-  #providers = new Map();
-  
-  /** @type {boolean} Initialized flag */
-  #initialized = false;
-  
-  constructor() {
-    this.#db = getFirestore();
-    this.#registerBuiltInProviders();
+  async function listIntegrations(options = {}) {
+    return fetchCollectionItems(store, 'integrations', options)
   }
-  
-  /**
-   * Get singleton instance
-   * @returns {IntegrationService} IntegrationService instance
-   */
-  static getInstance() {
-    if (!globalThis.__integrationService) {
-      globalThis.__integrationService = new IntegrationService();
-    }
-    return globalThis.__integrationService;
-  }
-  
-  /**
-   * Register built-in integration providers
-   * @private
-   */
-  #registerBuiltInProviders() {
-    this.#providers.set('stripe', {
-      id: 'stripe',
-      name: 'Stripe',
-      category: 'payments',
-      version: '1.0.0',
-      requiredCredentials: ['secretKey', 'publicKey'],
-      configSchema: {
-        webhookSecret: { type: 'string', required: true },
-        apiVersion: { type: 'string', default: '2023-10-16' }
-      }
-    });
-    
-    this.#providers.set('sendgrid', {
-      id: 'sendgrid',
-      name: 'SendGrid',
-      category: 'email',
-      version: '1.0.0',
-      requiredCredentials: ['apiKey'],
-      configSchema: {
-        fromEmail: { type: 'string', required: true },
-        fromName: { type: 'string', default: 'System' }
-      }
-    });
-    
-    this.#providers.set('slack', {
-      id: 'slack',
-      name: 'Slack',
-      category: 'messaging',
-      version: '1.0.0',
-      requiredCredentials: ['botToken', 'signingSecret'],
-      configSchema: {
-        defaultChannel: { type: 'string', default: '#general' }
-      }
-    });
-    
-    this.#providers.set('twilio', {
-      id: 'twilio',
-      name: 'Twilio',
-      category: 'sms',
-      version: '1.0.0',
-      requiredCredentials: ['accountSid', 'authToken'],
-      configSchema: {
-        fromPhone: { type: 'string', required: true }
-      }
-    });
-    
-    this.#providers.set('openai', {
-      id: 'openai',
-      name: 'OpenAI',
-      category: 'ai',
-      version: '1.0.0',
-      requiredCredentials: ['apiKey'],
-      configSchema: {
-        organization: { type: 'string' },
-        defaultModel: { type: 'string', default: 'gpt-4' }
-      }
-    });
-  }
-  
-  /**
-   * Initialize integration service
-   * @param {Object} config - Configuration
-   * @param {Object} authService - Auth service
-   * @param {Object} rbacService - RBAC service
-   * @returns {Promise<void>}
-   */
-  async initialize(config = {}, authService, rbacService) {
-    if (this.#initialized) {
-      console.warn('[IntegrationService] Already initialized');
-      return;
-    }
-    
+
+  async function getIntegrationById(integrationId) {
     try {
-      this.#authService = authService;
-      this.#rbacService = rbacService;
-      this.#config = {
-        providers: [],
-        webhookSecret: '',
-        encryptionKey: '',
-        ...config
-      };
-      
-      // Register custom providers from config
-      if (this.#config.providers) {
-        for (const provider of this.#config.providers) {
-          this.#providers.set(provider.id, provider);
-        }
-      }
-      
-      this.#initialized = true;
-      console.info('[IntegrationService] Initialized');
-      
+      return await runAction(integrationActions, ['getById'], integrationId)
     } catch (error) {
-      console.error('[IntegrationService] Initialization failed:', error);
-      throw error;
+      throw normalizeError(error, 'Unable to load the selected integration.')
     }
   }
-  
-  /**
-   * Create integration instance
-   * @param {Object} data - Integration data
-   * @returns {Promise<Object>} Created integration
-   */
-  async createIntegration(data) {
+
+  async function saveIntegration(payload) {
     try {
-      const user = this.#authService.getCurrentUser();
-      if (!user) {
-        throw new Error('AUTH_REQUIRED');
-      }
-      
-      // Check admin permission
-      const isAdmin = await this.#rbacService.isSuperAdmin(user.uid);
-      if (!isAdmin) {
-        throw new Error('PERMISSION_DENIED');
-      }
-      
-      const provider = this.#providers.get(data.providerId);
+      assertAccess(featureAccess, 'integrations.manage', 'You are not allowed to manage integrations.')
+      const provider = BUILT_IN_PROVIDERS.find((item) => item.id === payload.provider)
       if (!provider) {
-        throw new Error(`PROVIDER_NOT_FOUND: ${data.providerId}`);
+        throw new Error('Unsupported integration provider.')
       }
-      
-      // Validate credentials
-      for (const cred of provider.requiredCredentials) {
-        if (!data.credentials || !data.credentials[cred]) {
-          throw new Error(`MISSING_CREDENTIAL: ${cred}`);
-        }
+      const integrationId = payload.id || createId('integration')
+      const record = {
+        provider: provider.id,
+        name: payload.name?.trim() || provider.name,
+        category: payload.category || provider.category,
+        status: payload.status || 'draft',
+        environment: payload.environment || 'sandbox',
+        credentials: payload.credentials || {},
+        config: payload.config || {},
+        health: payload.health || { status: 'unknown', lastCheckedAt: null },
+        lastSyncedAt: payload.lastSyncedAt || null,
+        updatedAt: new Date().toISOString(),
       }
-      
-      const integrationId = this.#generateId();
-      const now = Timestamp.now();
-      
-      const integration = {
-        id: integrationId,
-        name: data.name,
-        providerId: data.providerId,
-        provider: provider,
-        credentials: await this.#encryptCredentials(data.credentials),
-        config: data.config || {},
-        status: 'active',
-        createdBy: user.uid,
-        createdAt: now,
-        updatedAt: now,
-        lastTested: null,
-        testStatus: null
-      };
-      
-      const integrationRef = doc(this.#db, 'integrations', integrationId);
-      await setDoc(integrationRef, integration);
-      
-      console.info(`[IntegrationService] Created integration: ${data.name} (${integrationId})`);
-      
-      // Remove credentials from returned object
-      const { credentials, ...safeIntegration } = integration;
-      return { ...safeIntegration, hasCredentials: true };
-      
+      if (payload.id) {
+        await runAction(integrationActions, ['update'], integrationId, record)
+      } else {
+        await runAction(integrationActions, ['setById', 'create', 'add'], integrationId, { ...record, createdAt: record.updatedAt })
+      }
+      await recordLog({ integrationId, provider: provider.id, level: 'info', event: 'integration.saved', message: `Integration ${record.name} saved.` })
+      return { id: integrationId, ...record }
     } catch (error) {
-      console.error('[IntegrationService] Create failed:', error);
-      throw error;
+      throw normalizeError(error, 'Unable to save the integration.')
     }
   }
-  
-  /**
-   * Get integration by ID
-   * @param {string} integrationId - Integration ID
-   * @param {boolean} includeCredentials - Include decrypted credentials
-   * @returns {Promise<Object|null>} Integration data
-   */
-  async getIntegration(integrationId, includeCredentials = false) {
+
+  async function testConnection(integrationId) {
+    const integration = await getIntegrationById(integrationId)
+    if (!integration) {
+      throw new Error('Integration not found.')
+    }
+    const simulated = {
+      status: integration.credentials && Object.keys(integration.credentials).length > 0 ? 'healthy' : 'warning',
+      checkedAt: new Date().toISOString(),
+      message: integration.credentials && Object.keys(integration.credentials).length > 0
+        ? 'Credentials look present. Replace this simulated check with a live provider probe.'
+        : 'No credentials are stored yet.',
+    }
+    await runAction(integrationActions, ['update'], integrationId, {
+      health: simulated,
+      status: simulated.status === 'healthy' ? 'connected' : 'error',
+      lastSyncedAt: simulated.checkedAt,
+      updatedAt: simulated.checkedAt,
+    })
+    await recordLog({ integrationId, provider: integration.provider, level: simulated.status === 'healthy' ? 'info' : 'warning', event: 'integration.tested', message: simulated.message })
+    return simulated
+  }
+
+  async function saveWebhook(integrationId, payload) {
     try {
-      const user = this.#authService.getCurrentUser();
-      if (!user) {
-        throw new Error('AUTH_REQUIRED');
+      assertAccess(featureAccess, 'integrations.manage', 'You are not allowed to manage integration webhooks.')
+      const webhookId = payload.id || createId('webhook')
+      const record = {
+        integrationId,
+        name: payload.name?.trim() || 'Webhook endpoint',
+        url: payload.url?.trim() || '',
+        event: payload.event?.trim() || 'default.event',
+        method: payload.method || 'POST',
+        secretKeyRef: payload.secretKeyRef || '',
+        isActive: payload.isActive !== false,
+        lastDeliveredAt: payload.lastDeliveredAt || null,
+        updatedAt: new Date().toISOString(),
       }
-      
-      const integrationRef = doc(this.#db, 'integrations', integrationId);
-      const integrationDoc = await getDoc(integrationRef);
-      
-      if (!integrationDoc.exists()) {
-        return null;
+      if (!record.url) {
+        throw new Error('Webhook URL is required.')
       }
-      
-      const integration = integrationDoc.data();
-      
-      // Check permissions
-      const isAdmin = await this.#rbacService.isSuperAdmin(user.uid);
-      const isCreator = integration.createdBy === user.uid;
-      
-      if (!isAdmin && !isCreator) {
-        throw new Error('PERMISSION_DENIED');
+      if (payload.id) {
+        await runAction(webhookActions, ['update'], webhookId, record)
+      } else {
+        await runAction(webhookActions, ['setById', 'create', 'add'], webhookId, { ...record, createdAt: record.updatedAt })
       }
-      
-      if (includeCredentials && isAdmin) {
-        const decrypted = await this.#decryptCredentials(integration.credentials);
-        return { ...integration, credentials: decrypted };
-      }
-      
-      const { credentials, ...safeIntegration } = integration;
-      return { ...safeIntegration, hasCredentials: !!credentials };
-      
+      return { id: webhookId, ...record }
     } catch (error) {
-      console.error('[IntegrationService] Get failed:', error);
-      throw error;
+      throw normalizeError(error, 'Unable to save the webhook endpoint.')
     }
   }
-  
-  /**
-   * List integrations
-   * @param {Object} options - Query options
-   * @returns {Promise<Array>} List of integrations
-   */
-  async listIntegrations(options = {}) {
-    try {
-      const user = this.#authService.getCurrentUser();
-      if (!user) {
-        throw new Error('AUTH_REQUIRED');
-      }
-      
-      const { providerId, status } = options;
-      let constraints = [];
-      
-      if (providerId) {
-        constraints.push(where('providerId', '==', providerId));
-      }
-      
-      if (status) {
-        constraints.push(where('status', '==', status));
-      }
-      
-      const q = query(collection(this.#db, 'integrations'), ...constraints);
-      const snapshot = await getDocs(q);
-      
-      const integrations = [];
-      snapshot.forEach(doc => {
-        const { credentials, ...data } = doc.data();
-        integrations.push({ id: doc.id, ...data, hasCredentials: !!credentials });
-      });
-      
-      return integrations;
-      
-    } catch (error) {
-      console.error('[IntegrationService] List failed:', error);
-      throw error;
+
+  async function listLogs(options = {}) {
+    return fetchCollectionItems(store, 'integrationLogs', options)
+  }
+
+  async function recordLog(payload) {
+    const logId = createId('integration-log')
+    const record = {
+      integrationId: payload.integrationId,
+      provider: payload.provider,
+      level: payload.level || 'info',
+      event: payload.event || 'integration.event',
+      message: payload.message || 'Integration event recorded.',
+      context: payload.context || {},
+      createdAt: new Date().toISOString(),
     }
+    await runAction(logActions, ['setById', 'create', 'add'], logId, record)
+    return { id: logId, ...record }
   }
-  
-  /**
-   * Update integration
-   * @param {string} integrationId - Integration ID
-   * @param {Object} updates - Updates to apply
-   * @returns {Promise<Object>} Updated integration
-   */
-  async updateIntegration(integrationId, updates) {
-    try {
-      const user = this.#authService.getCurrentUser();
-      if (!user) {
-        throw new Error('AUTH_REQUIRED');
-      }
-      
-      const integration = await this.getIntegration(integrationId);
-      if (!integration) {
-        throw new Error('INTEGRATION_NOT_FOUND');
-      }
-      
-      const isAdmin = await this.#rbacService.isSuperAdmin(user.uid);
-      if (!isAdmin) {
-        throw new Error('PERMISSION_DENIED');
-      }
-      
-      const allowedUpdates = ['name', 'config', 'status'];
-      const filteredUpdates = {};
-      
-      for (const key of allowedUpdates) {
-        if (updates[key] !== undefined) {
-          filteredUpdates[key] = updates[key];
-        }
-      }
-      
-      if (updates.credentials) {
-        filteredUpdates.credentials = await this.#encryptCredentials(updates.credentials);
-      }
-      
-      filteredUpdates.updatedAt = Timestamp.now();
-      
-      const integrationRef = doc(this.#db, 'integrations', integrationId);
-      await updateDoc(integrationRef, filteredUpdates);
-      
-      console.info(`[IntegrationService] Updated integration: ${integrationId}`);
-      
-      return this.getIntegration(integrationId);
-      
-    } catch (error) {
-      console.error('[IntegrationService] Update failed:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Delete integration
-   * @param {string} integrationId - Integration ID
-   * @returns {Promise<void>}
-   */
-  async deleteIntegration(integrationId) {
-    try {
-      const user = this.#authService.getCurrentUser();
-      if (!user) {
-        throw new Error('AUTH_REQUIRED');
-      }
-      
-      const isAdmin = await this.#rbacService.isSuperAdmin(user.uid);
-      if (!isAdmin) {
-        throw new Error('PERMISSION_DENIED');
-      }
-      
-      const integrationRef = doc(this.#db, 'integrations', integrationId);
-      await deleteDoc(integrationRef);
-      
-      console.info(`[IntegrationService] Deleted integration: ${integrationId}`);
-      
-    } catch (error) {
-      console.error('[IntegrationService] Delete failed:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Test integration connection
-   * @param {string} integrationId - Integration ID
-   * @returns {Promise<Object>} Test result
-   */
-  async testIntegration(integrationId) {
-    try {
-      const integration = await this.getIntegration(integrationId, true);
-      if (!integration) {
-        throw new Error('INTEGRATION_NOT_FOUND');
-      }
-      
-      const result = {
-        success: false,
-        message: '',
-        timestamp: Timestamp.now()
-      };
-      
-      // Test based on provider type
-      switch (integration.providerId) {
-        case 'stripe':
-          result.success = await this.#testStripe(integration);
-          break;
-        case 'sendgrid':
-          result.success = await this.#testSendGrid(integration);
-          break;
-        case 'slack':
-          result.success = await this.#testSlack(integration);
-          break;
-        default:
-          result.message = 'Testing not implemented for this provider';
-      }
-      
-      // Update integration with test results
-      const integrationRef = doc(this.#db, 'integrations', integrationId);
-      await updateDoc(integrationRef, {
-        lastTested: result.timestamp,
-        testStatus: result.success ? 'success' : 'failed',
-        testMessage: result.message
-      });
-      
-      return result;
-      
-    } catch (error) {
-      console.error('[IntegrationService] Test failed:', error);
-      return {
-        success: false,
-        message: error.message,
-        timestamp: Timestamp.now()
-      };
-    }
-  }
-  
-  /**
-   * Get available providers
-   * @returns {Array} List of providers
-   */
-  getProviders() {
-    return Array.from(this.#providers.values());
-  }
-  
-  /**
-   * Encrypt sensitive credentials
-   * @private
-   * @param {Object} credentials - Plain text credentials
-   * @returns {Promise<Object>} Encrypted credentials
-   */
-  async #encryptCredentials(credentials) {
-    // In production, implement proper encryption (e.g., using crypto-js or Firebase KMS)
-    // This is a placeholder that simulates encryption
-    return {
-      encrypted: true,
-      data: Buffer.from(JSON.stringify(credentials)).toString('base64')
-    };
-  }
-  
-  /**
-   * Decrypt credentials
-   * @private
-   * @param {Object} encrypted - Encrypted credentials
-   * @returns {Promise<Object>} Decrypted credentials
-   */
-  async #decryptCredentials(encrypted) {
-    if (!encrypted || !encrypted.encrypted) {
-      return {};
-    }
-    
-    try {
-      const decrypted = JSON.parse(
-        Buffer.from(encrypted.data, 'base64').toString('utf-8')
-      );
-      return decrypted;
-    } catch {
-      return {};
-    }
-  }
-  
-  /**
-   * Test Stripe integration
-   * @private
-   * @param {Object} integration - Integration data
-   * @returns {Promise<boolean>} Test result
-   */
-  async #testStripe(integration) {
-    try {
-      // Placeholder - actual Stripe test would make an API call
-      console.log(`Testing Stripe with key: ${integration.credentials.secretKey?.substring(0, 8)}...`);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-  
-  /**
-   * Test SendGrid integration
-   * @private
-   */
-  async #testSendGrid(integration) {
-    try {
-      console.log(`Testing SendGrid with key: ${integration.credentials.apiKey?.substring(0, 8)}...`);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-  
-  /**
-   * Test Slack integration
-   * @private
-   */
-  async #testSlack(integration) {
-    try {
-      console.log(`Testing Slack with token: ${integration.credentials.botToken?.substring(0, 8)}...`);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-  
-  /**
-   * Generate unique ID
-   * @private
-   */
-  #generateId() {
-    return `int_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  return {
+    settings,
+    listProviders,
+    listIntegrations,
+    getIntegrationById,
+    saveIntegration,
+    testConnection,
+    saveWebhook,
+    listLogs,
+    recordLog,
   }
 }
 
-const integrationService = IntegrationService.getInstance();
-export default integrationService;
+const legacyService = createLegacyService(() => createIntegrationsService({ appStore: useAppStore() }))
+export default legacyService

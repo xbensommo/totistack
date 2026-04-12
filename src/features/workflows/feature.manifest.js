@@ -1,43 +1,18 @@
 /**
- * Workflow Automation Feature Manifest
- * @module features/workflow
- * @description Workflow automation engine for creating, managing, and executing automated workflows
- * @author Totistack Team
- * @date 2026-03-22
+ * @file workflows/feature.manifest.js
+ * @description Declarative manifest for the Totistack workflows feature.
  */
-
 export default {
-  id: 'workflow',
-  name: 'Workflow Automation',
-  version: '2.0.0',
-  description: 'Visual workflow builder with triggers, actions, and conditional logic',
-  
+  id: 'workflows',
+  type: 'feature',
+  name: 'Workflows',
+  version: '3.0.0',
+  description: 'Workflow definitions, triggers, execution runs, and operational logs.',
   dependencies: {
-    features: ['auth', 'rbac', 'integration'],
-    apps: []
+    features: ['auth', 'rbac', 'integrations'],
+    apps: [],
   },
-  
-  configSchema: {
-    type: 'object',
-    properties: {
-      maxConcurrentExecutions: { type: 'number', default: 10 },
-      executionTimeout: { type: 'number', default: 300 },
-      enableAuditLog: { type: 'boolean', default: true },
-      webhookSecret: { type: 'string', default: '' }
-    }
-  },
-  
-  collections: [
-    'workflows',
-    'workflowExecutions',
-    'workflowTriggers',
-    'workflowActions',
-    'workflowLogs'
-  ],
-  
-  services: ['workflowEngine', 'triggerService', 'actionService', 'schedulerService'],
-  
-  stores: ['workflow'],
-  
-  hooks: ['onWorkflowTriggered', 'onWorkflowCompleted', 'onWorkflowFailed']
-};
+  collections: ['workflows', 'workflowRuns', 'workflowTriggers', 'workflowLogs'],
+  services: ['workflowService'],
+  routes: ['./routes.js'],
+}

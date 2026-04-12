@@ -391,7 +391,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useHead } from '@vueuse/head';
-import { useDatabaseManager } from '../hooks/use-database-manager.js';
+import { useDatabaseManager } from './use-database-manager.js';
 
 // ─── SEO ──────────────────────────────────────────────────────────────────────
 useHead({

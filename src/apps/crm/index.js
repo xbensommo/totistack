@@ -1,26 +1,20 @@
 /**
- * @file crm/index.js
- * @description CRM module entry for declarative Totistack assembly.
+ * @file apps/crm/index.js
+ * @description Backward-compatible CRM barrel exports.
+ *
+ * This module is declarative. It does not self-register routes, stores, or providers.
+ * The Totistack generated assembly layer discovers these exports at build time.
  */
 
-import manifest from './manifest.js'
-import routes from './routes.js'
-import createServices from './services.js'
-import crmLeads from './collections/crm_leads.definitions.js'
-import crmOpportunities from './collections/crm_opportunities.definitions.js'
-import crmActivities from './collections/crm_activities.definitions.js'
-
-export const collections = [crmLeads, crmOpportunities, crmActivities]
-
+export { default as manifest } from './app.manifest.js';
+export { default as routes } from './routes.js';
 export {
-  manifest,
-  routes,
-  createServices,
-}
+  createCrmService,
+  useCrmService,
+  CRM_COLLECTIONS,
+  CRM_PIPELINE_STAGES,
+} from './services/crmService.js';
 
-export default {
-  manifest,
-  routes,
-  createServices,
-  collections,
-}
+export { default as crmLeads } from './collections/crm_leads.collection.js';
+export { default as crmOpportunities } from './collections/crm_opportunities.collection.js';
+export { default as crmActivities } from './collections/crm_activities.collection.js';

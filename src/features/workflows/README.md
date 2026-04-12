@@ -1,7 +1,13 @@
-# Workflows
+# Workflows feature
 
-Installable Totistack feature.
+Enterprise-ready starter feature for:
 
-## Collections
+- workflow definitions
+- trigger records
+- execution run history
+- workflow log records
+- starter builder and operations UI
 
-- `workflowDefinitions`\n
+## Production note
+
+Complex scheduling, durable queues, retries, and long-running jobs should be offloaded to workers or background infrastructure. This starter feature keeps orchestration project-local and easy to swap.

@@ -13,7 +13,7 @@
         <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
         <div class="relative rounded-2xl p-1">
           <img
-            src="@/assets/logo.png"
+            src="#"
             class="w-12 sm:w-14 md:w-16 lg:w-20 h-auto rounded-xl transition-all duration-500 group-hover:scale-110"
             alt="Totisoft CC Logo"
           />

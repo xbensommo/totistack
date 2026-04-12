@@ -31,7 +31,7 @@
             <div class="rounded-2xl border border-white/10 bg-white/5 p-2 shadow-lg">
               <img
                 class="h-auto w-16 rounded-xl md:w-20"
-                src="@/assets/logo.png"
+                src="#"
                 alt="Totisoft Logo"
               />
             </div>
