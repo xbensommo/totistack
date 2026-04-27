@@ -1,13 +1,28 @@
 <template>
-  <AuthCard title="Choose a new password" description="Complete the password reset flow started from your email link.">
-    <form class="space-y-4" @submit.prevent="handleSubmit">
-      <AuthField v-model="password" label="New password" type="password" autocomplete="new-password" :error="errors.password" />
-      <AuthField v-model="confirmPassword" label="Confirm password" type="password" autocomplete="new-password" :error="errors.confirmPassword" />
-      <button
-        type="submit"
-        class="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-        :disabled="loading"
-      >
+  <AuthCard
+    eyebrow="Secure reset"
+    title="Choose a new password"
+    description="Complete the reset flow started from your email link."
+  >
+    <form class="space-y-5" @submit.prevent="handleSubmit">
+      <AuthField
+        v-model="password"
+        label="New password"
+        type="password"
+        autocomplete="new-password"
+        placeholder="Minimum 8 characters"
+        :error="errors.password"
+      />
+      <AuthField
+        v-model="confirmPassword"
+        label="Confirm password"
+        type="password"
+        autocomplete="new-password"
+        placeholder="Repeat your new password"
+        :error="errors.confirmPassword"
+      />
+
+      <button type="submit" class="btn-primary w-full" :disabled="loading">
         {{ loading ? 'Updating password...' : 'Update password' }}
       </button>
     </form>

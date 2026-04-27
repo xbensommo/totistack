@@ -85,7 +85,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import { createOrderServices } from '../services/orderService.js'
 import EntityPageShell from '../components/EntityPageShell.vue'
 import StatCard from '../components/StatCard.vue'

@@ -5,12 +5,9 @@
 
 import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider'
 
-/**
- * Order transaction and fulfillment records.
- */
 export default defineCollection({
   name: 'orders',
-  shard: { type: 'monthly' },
+  shard: { type: 'none' },
   schema: {
     orderNumber: {
       type: FIELD_TYPES.STRING,
@@ -24,9 +21,19 @@ export default defineCollection({
       required: true,
       filterable: true,
     },
-    userId: {
+    customerId: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    placedById: {
       type: FIELD_TYPES.STRING,
       required: true,
+      filterable: true,
+    },
+    assignedTo: {
+      type: FIELD_TYPES.STRING,
+      required: false,
       filterable: true,
     },
     status: {
@@ -35,9 +42,46 @@ export default defineCollection({
       filterable: true,
       sortable: true,
     },
+    businessStage: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+      sortable: true,
+    },
+    orderType: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    fulfillmentType: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    channel: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    sourceType: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    sourceId: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
     paymentStatus: {
       type: FIELD_TYPES.STRING,
       required: true,
+      filterable: true,
+      sortable: true,
+    },
+    financeStatus: {
+      type: FIELD_TYPES.STRING,
+      required: false,
       filterable: true,
       sortable: true,
     },
@@ -135,6 +179,19 @@ export default defineCollection({
       required: false,
       searchable: true,
     },
+    businessProfile: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    businessData: {
+      type: FIELD_TYPES.MAP,
+      required: false,
+    },
+    workflowData: {
+      type: FIELD_TYPES.MAP,
+      required: false,
+    },
     metadata: {
       type: FIELD_TYPES.MAP,
       required: false,
@@ -181,9 +238,18 @@ export default defineCollection({
   writableFields: [
     'orderNumber',
     'clientId',
-    'userId',
+    'customerId',
+    'placedById',
+    'assignedTo',
     'status',
+    'businessStage',
+    'orderType',
+    'fulfillmentType',
+    'channel',
+    'sourceType',
+    'sourceId',
     'paymentStatus',
+    'financeStatus',
     'paymentMethod',
     'paymentId',
     'currency',
@@ -202,14 +268,25 @@ export default defineCollection({
     'notes',
     'customerNotes',
     'internalNotes',
+    'businessProfile',
+    'businessData',
+    'workflowData',
     'metadata',
     'processedAt',
     'completedAt',
     'cancelledAt',
   ],
   updateableFields: [
+    'assignedTo',
     'status',
+    'businessStage',
+    'orderType',
+    'fulfillmentType',
+    'channel',
+    'sourceType',
+    'sourceId',
     'paymentStatus',
+    'financeStatus',
     'paymentMethod',
     'paymentId',
     'discount',
@@ -226,6 +303,9 @@ export default defineCollection({
     'notes',
     'customerNotes',
     'internalNotes',
+    'businessProfile',
+    'businessData',
+    'workflowData',
     'metadata',
     'processedAt',
     'completedAt',
@@ -234,9 +314,13 @@ export default defineCollection({
   indexes: [
     { fields: ['orderNumber'] },
     { fields: ['clientId', 'createdAt'] },
-    { fields: ['userId', 'createdAt'] },
+    { fields: ['customerId', 'createdAt'] },
+    { fields: ['placedById', 'createdAt'] },
+    { fields: ['assignedTo', 'createdAt'] },
     { fields: ['status', 'createdAt'] },
     { fields: ['paymentStatus', 'createdAt'] },
+    { fields: ['financeStatus', 'createdAt'] },
+    { fields: ['businessProfile', 'createdAt'] },
     { fields: ['total', 'createdAt'] },
   ],
   search: {

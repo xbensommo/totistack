@@ -6,7 +6,7 @@ import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider'
  */
 export default defineCollection({
   name: 'formSubmissions',
-  shard: { type: 'monthly' },
+  shard: { type: 'none' },
   schema: {
     formId: { type: FIELD_TYPES.STRING, required: true, filterable: true },
     formSlug: { type: FIELD_TYPES.STRING, required: true, filterable: true },

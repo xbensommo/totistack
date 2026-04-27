@@ -1,20 +1,34 @@
 <template>
   <label class="block">
-    <span class="mb-2 block text-sm font-medium text-slate-700">{{ label }}</span>
-    <input
-      :value="modelValue"
-      :type="type"
-      :autocomplete="autocomplete"
-      :placeholder="placeholder"
-      class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-      @input="$emit('update:modelValue', $event.target.value)"
-    />
-    <p v-if="error" class="mt-2 text-xs font-medium text-red-600">{{ error }}</p>
+    <span class="field-label">{{ label }}</span>
+
+    <div class="input-group">
+      <slot name="prefix" />
+      <input
+        :value="modelValue"
+        :type="type"
+        :autocomplete="autocomplete"
+        :placeholder="placeholder"
+        :class="[
+          'input-field',
+          hasPrefix ? 'pl-11' : '',
+          error ? 'input-invalid' : '',
+        ]"
+        @input="$emit('update:modelValue', $event.target.value)"
+      />
+      <slot name="suffix" />
+    </div>
+
+    <p v-if="error" class="field-error">{{ error }}</p>
   </label>
 </template>
 
 <script setup>
-defineProps({
+import { computed, useSlots } from 'vue';
+
+const slots = useSlots();
+
+const props = defineProps({
   modelValue: {
     type: String,
     default: '',
@@ -42,4 +56,7 @@ defineProps({
 });
 
 defineEmits(['update:modelValue']);
+
+const hasPrefix = computed(() => Boolean(slots.prefix));
+void props;
 </script>

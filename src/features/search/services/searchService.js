@@ -2,15 +2,12 @@
  * @file search/services/searchService.js
  * @description Root-store compatible service factory for the search feature.
  */
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import {
   assertAccess,
   createId,
-  createLegacyService,
-  fetchCollectionItems,
-  getCollectionActions,
+  fetchDirectCollectionItems,
   normalizeError,
-  runAction,
 } from '../../shared/featureToolkit.js'
 
 /**
@@ -22,17 +19,20 @@ import {
 export function createSearchService({ appStore, access, config = {} } = {}) {
   const store = appStore || useAppStore()
   const featureAccess = access || store?.access || null
-  const indexActions = getCollectionActions(store, 'searchIndexes')
-  const queryActions = getCollectionActions(store, 'searchQueries')
-  const synonymActions = getCollectionActions(store, 'searchSynonyms')
+  const indexActions = store?.searchIndexesActions
+  if (!indexActions) throw new Error('Missing root-store shard actions: store.searchIndexesActions')
+  const queryActions = store?.searchQueriesActions
+  if (!queryActions) throw new Error('Missing root-store shard actions: store.searchQueriesActions')
+  const synonymActions = store?.searchSynonymsActions
+  if (!synonymActions) throw new Error('Missing root-store shard actions: store.searchSynonymsActions')
   const settings = { defaultLimit: 20, maxLimit: 100, ...config }
 
   async function listIndexes(options = {}) {
-    return fetchCollectionItems(store, 'searchIndexes', options)
+    return fetchDirectCollectionItems(store, 'searchIndexes', indexActions, options)
   }
 
   async function listSynonyms(options = {}) {
-    return fetchCollectionItems(store, 'searchSynonyms', options)
+    return fetchDirectCollectionItems(store, 'searchSynonyms', synonymActions, options)
   }
 
   async function indexDocument(payload) {
@@ -52,9 +52,9 @@ export function createSearchService({ appStore, access, config = {} } = {}) {
         updatedAt: new Date().toISOString(),
       }
       if (payload.id) {
-        await runAction(indexActions, ['update'], id, record)
+        await indexActions.update(id, record)
       } else {
-        await runAction(indexActions, ['setById', 'create', 'add'], id, { ...record, createdAt: record.updatedAt })
+        await indexActions.setById(id, { ...record, createdAt: record.updatedAt })
       }
       return { id, ...record }
     } catch (error) {
@@ -77,9 +77,9 @@ export function createSearchService({ appStore, access, config = {} } = {}) {
         throw new Error('A search term is required.')
       }
       if (payload.id) {
-        await runAction(synonymActions, ['update'], id, record)
+        await synonymActions.update(id, record)
       } else {
-        await runAction(synonymActions, ['setById', 'create', 'add'], id, { ...record, createdAt: record.updatedAt })
+        await synonymActions.setById(id, { ...record, createdAt: record.updatedAt })
       }
       return { id, ...record }
     } catch (error) {
@@ -104,7 +104,7 @@ export function createSearchService({ appStore, access, config = {} } = {}) {
         .sort((left, right) => right._score - left._score)
         .slice(0, pageSize)
 
-      await runAction(queryActions, ['setById', 'create', 'add'], createId('query'), {
+      await queryActions.setById(createId('query'), {
         query: raw,
         resultCount: results.length,
         filters: options.filters || {},
@@ -163,5 +163,4 @@ function computeScore(indexRecord, tokens) {
   return score
 }
 
-const legacyService = createLegacyService(() => createSearchService({ appStore: useAppStore() }))
-export default legacyService
+export default createSearchService

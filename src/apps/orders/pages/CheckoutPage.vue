@@ -72,7 +72,7 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import { createOrderServices } from '../services/orderService.js'
 import EntityPageShell from '../components/EntityPageShell.vue'
 

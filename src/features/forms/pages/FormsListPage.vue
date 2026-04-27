@@ -1,42 +1,56 @@
 <template>
   <FeaturePageShell eyebrow="Forms" title="Form operations" description="Create, publish, and monitor reusable forms from one place.">
     <template #actions>
-      <RouterLink to="/admin/forms/new" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Create form</RouterLink>
+      <RouterLink to="/admin/forms/new" class="btn-primary">
+        <i class="fas fa-plus text-xs"></i>
+        Create form
+      </RouterLink>
     </template>
 
     <MetricsGrid :items="stats" />
 
-    <div v-if="forms.length" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <table class="min-w-full divide-y divide-slate-200 text-sm">
-        <thead class="bg-slate-50">
+    <div v-if="forms.length" class="table-wrap">
+      <table class="table-base">
+        <thead>
           <tr>
-            <th class="px-4 py-3 text-left font-semibold text-slate-600">Form</th>
-            <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-            <th class="px-4 py-3 text-left font-semibold text-slate-600">Submissions</th>
-            <th class="px-4 py-3 text-right font-semibold text-slate-600">Actions</th>
+            <th>Form</th>
+            <th>Status</th>
+            <th>Submissions</th>
+            <th class="text-right">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
+        <tbody>
           <tr v-for="form in forms" :key="form.id">
-            <td class="px-4 py-3">
-              <p class="font-semibold text-slate-900">{{ form.name }}</p>
-              <p class="text-xs uppercase tracking-[0.2em] text-slate-500">/{{ form.slug }}</p>
+            <td>
+              <p class="font-semibold text-[var(--color-text)]">{{ form.name }}</p>
+              <p class="mt-1 text-caption">/{{ form.slug }}</p>
             </td>
-            <td class="px-4 py-3"><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">{{ form.status }}</span></td>
-            <td class="px-4 py-3 text-slate-700">{{ form.totalSubmissions || 0 }}</td>
-            <td class="px-4 py-3 text-right">
-              <div class="inline-flex gap-2">
-                <RouterLink :to="`/admin/forms/${form.id}`" class="rounded-xl border border-slate-200 px-3 py-2 font-medium text-slate-700 hover:bg-slate-50">Edit</RouterLink>
-                <RouterLink :to="`/admin/forms/${form.id}/submissions`" class="rounded-xl border border-slate-200 px-3 py-2 font-medium text-slate-700 hover:bg-slate-50">Submissions</RouterLink>
+            <td>
+              <span
+                class="badge"
+                :class="form.status === 'published' ? 'badge-success' : 'badge-primary'"
+              >
+                {{ form.status }}
+              </span>
+            </td>
+            <td>{{ form.totalSubmissions || 0 }}</td>
+            <td class="text-right">
+              <div class="inline-flex flex-wrap justify-end gap-2">
+                <RouterLink :to="`/admin/forms/${form.id}`" class="btn-secondary btn-sm">Edit</RouterLink>
+                <RouterLink :to="`/admin/forms/${form.id}/submissions`" class="btn-outline btn-sm">Submissions</RouterLink>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
+
     <EmptyState v-else title="No forms yet" description="Create your first form to start collecting submissions and triggering workflows.">
       <template #actions>
-        <RouterLink to="/admin/forms/new" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Create form</RouterLink>
+        <RouterLink to="/admin/forms/new" class="btn-primary">
+          <i class="fas fa-plus text-xs"></i>
+          Create form
+        </RouterLink>
       </template>
     </EmptyState>
   </FeaturePageShell>

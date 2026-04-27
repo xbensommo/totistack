@@ -2,15 +2,12 @@
  * @file media/services/mediaService.js
  * @description Root-store compatible service factory for the media feature.
  */
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import {
   assertAccess,
   createId,
-  createLegacyService,
-  fetchCollectionItems,
-  getCollectionActions,
+  fetchDirectCollectionItems,
   normalizeError,
-  runAction,
   slugify,
 } from '../../shared/featureToolkit.js'
 
@@ -23,16 +20,18 @@ import {
 export function createMediaService({ appStore, access, config = {} } = {}) {
   const store = appStore || useAppStore()
   const featureAccess = access || store?.access || null
-  const fileActions = getCollectionActions(store, 'mediaFiles')
-  const folderActions = getCollectionActions(store, 'mediaFolders')
+  const fileActions = store?.mediaFilesActions
+  if (!fileActions) throw new Error('Missing root-store shard actions: store.mediaFilesActions')
+  const folderActions = store?.mediaFoldersActions
+  if (!folderActions) throw new Error('Missing root-store shard actions: store.mediaFoldersActions')
   const settings = { maxFileSize: 10 * 1024 * 1024, allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'], ...config }
 
   async function listFiles(options = {}) {
-    return fetchCollectionItems(store, 'mediaFiles', options)
+    return fetchDirectCollectionItems(store, 'mediaFiles', fileActions, options)
   }
 
   async function listFolders(options = {}) {
-    return fetchCollectionItems(store, 'mediaFolders', options)
+    return fetchDirectCollectionItems(store, 'mediaFolders', folderActions, options)
   }
 
   async function createFolder(payload) {
@@ -48,7 +47,7 @@ export function createMediaService({ appStore, access, config = {} } = {}) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
-      await runAction(folderActions, ['setById', 'create', 'add'], folderId, record)
+      await folderActions.setById(folderId, record)
       return { id: folderId, ...record }
     } catch (error) {
       throw normalizeError(error, 'Unable to create the media folder.')
@@ -83,9 +82,9 @@ export function createMediaService({ appStore, access, config = {} } = {}) {
         throw new Error('A storage path is required for media records.')
       }
       if (payload.id) {
-        await runAction(fileActions, ['update'], fileId, record)
+        await fileActions.update(fileId, record)
       } else {
-        await runAction(fileActions, ['setById', 'create', 'add'], fileId, { ...record, createdAt: record.updatedAt })
+        await fileActions.setById(fileId, { ...record, createdAt: record.updatedAt })
       }
       return { id: fileId, ...record }
     } catch (error) {
@@ -96,7 +95,7 @@ export function createMediaService({ appStore, access, config = {} } = {}) {
   async function removeFile(fileId) {
     try {
       assertAccess(featureAccess, 'media.manage', 'You are not allowed to delete media files.')
-      await runAction(fileActions, ['remove', 'delete'], fileId)
+      await fileActions.remove(fileId)
       return true
     } catch (error) {
       throw normalizeError(error, 'Unable to remove the media file.')
@@ -113,5 +112,4 @@ export function createMediaService({ appStore, access, config = {} } = {}) {
   }
 }
 
-const legacyService = createLegacyService(() => createMediaService({ appStore: useAppStore() }))
-export default legacyService
+export default createMediaService

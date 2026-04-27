@@ -7,7 +7,7 @@
     <template #actions>
       <RouterLink
         to="/bookings"
-        class="inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        class="btn-secondary"
       >
         Back to bookings
       </RouterLink>
@@ -24,7 +24,7 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import EntityPageShell from '../components/EntityPageShell.vue'
 import BookingCalendarCard from '../components/BookingCalendarCard.vue'
 import StatusBadge from '../components/StatusBadge.vue'

@@ -1,21 +1,33 @@
 <template>
-  <DashboardWidgetCard title="Trend Snapshot" description="A lightweight visual of recent collection growth without forcing a charting dependency.">
-    <div class="space-y-5">
-      <section v-for="series in normalizedSeries" :key="series.id" class="space-y-2">
-        <div class="flex items-center justify-between gap-4">
-          <h4 class="text-sm font-semibold text-slate-900">
-            {{ series.label }}
-          </h4>
-          <span class="text-xs text-slate-500">
+  <DashboardWidgetCard
+    title="Trend Snapshot"
+    description="A lightweight visual of recent collection growth without forcing a charting dependency."
+  >
+    <div class="space-y-6">
+      <section
+        v-for="series in normalizedSeries"
+        :key="series.id"
+        class="rounded-theme-xl border border-theme bg-surface-2 p-4 md:p-5"
+      >
+        <div class="mb-4 flex items-center justify-between gap-4">
+          <div>
+            <h4 class="text-sm font-semibold text-[var(--color-text)]">
+              {{ series.label }}
+            </h4>
+            <p class="mt-1 text-xs text-muted">
+              10-point condensed trend view
+            </p>
+          </div>
+          <span class="badge badge-primary">
             {{ series.values[series.values.length - 1] || 0 }} latest
           </span>
         </div>
 
-        <div class="grid h-24 grid-cols-10 items-end gap-2">
+        <div class="grid h-28 grid-cols-10 items-end gap-2">
           <div
             v-for="(value, index) in compactValues(series.values)"
             :key="`${series.id}-${index}`"
-            class="rounded-t-md bg-slate-300"
+            class="rounded-t-xl bg-brand-gradient shadow-theme-xs transition-theme hover:opacity-90"
             :style="{ height: `${getColumnHeight(value, series.max)}%` }"
           />
         </div>

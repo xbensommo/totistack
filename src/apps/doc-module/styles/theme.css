@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1860A8;
+  --color-secondary: #4A90E2;
+  --color-accent: #000000;
+
+  --color-text: #0F172A;
+  --color-text-light: #64748B;
+  --color-neutral: #F8FAFC;
+  --color-neutral-dark: #E2E8F0;
+  --color-background: #FFFFFF;
+
+  --color-danger: #EF4444;
+  --color-success: #10B981;
+
+  --font-sans: "Inter", sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+
+  --animation-node-pulse: nodePulse 3s ease-in-out infinite;
+  --animation-circuit-flow: circuitFlow 5s linear infinite;
+  --animation-fade-up: fadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-neutral); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-light);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+
+@keyframes nodePulse {
+  0%, 100% { transform: scale(1); opacity: 0.82; }
+  50% { transform: scale(1.04); opacity: 1; }
+}
+
+@keyframes circuitFlow {
+  from { background-position: 0 0; }
+  to { background-position: 200px 0; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+}
+
+@layer components {
+  /*.tech-card {
+    @apply rounded-2xl border border-[var(--color-neutral-dark)] bg-white shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)];
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-transparent bg-[var(--color-neutral)] px-4 py-3 text-[var(--color-text)] placeholder-[var(--color-text-light)] transition-all duration-300 focus:border-[var(--color-secondary)] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[var(--color-secondary)]/10;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-3 rounded-xl bg-[var(--color-accent)] px-6 py-3 text-[1rem] font-medium tracking-wide text-white transition-all duration-300 hover:bg-[var(--color-primary)] hover:shadow-lg hover:shadow-[var(--color-primary)]/20 active:scale-95;
+  }
+
+  .display-text {
+    @apply font-[var(--font-display)] text-5xl font-bold leading-tight tracking-tight text-[var(--color-text)] md:text-6xl lg:text-7xl;
+  }
+
+  .studio-section {
+    @apply tech-card p-5;
+  }
+
+  .studio-label {
+    @apply mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-light)];
+  }
+
+  .studio-toggle {
+    @apply flex items-center justify-between rounded-xl border border-[var(--color-neutral-dark)] bg-white px-4 py-3;
+  }
+
+  .doc-page-shell {
+    @apply relative grid gap-4 rounded-[24px] bg-white p-10 text-[var(--color-text)] shadow-[0_18px_60px_rgba(15,23,42,0.12)];
+  }*/
+}

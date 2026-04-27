@@ -1,16 +1,31 @@
 <template>
-  <aside class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <h3 class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Field library</h3>
-    <div class="mt-4 grid gap-3">
+  <aside class="card h-fit">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <p class="section-label">Builder tools</p>
+        <h3 class="mt-3 section-title">Field library</h3>
+        <p class="mt-1 text-sm text-muted">Add reusable input types to your form canvas.</p>
+      </div>
+      <span class="badge">{{ fields.length }}</span>
+    </div>
+
+    <div class="mt-5 grid gap-3">
       <button
         v-for="field in fields"
         :key="field.type"
         type="button"
-        class="rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50"
+        class="option-card text-left"
         @click="$emit('add', field)"
       >
-        <span class="block text-sm font-semibold text-slate-900">{{ field.label }}</span>
-        <span class="mt-1 block text-xs text-slate-500">{{ field.type }}</span>
+        <span
+          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(109,94,252,0.08)] text-primary"
+        >
+          <i class="fas fa-plus text-sm"></i>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-sm font-semibold text-[var(--color-text)]">{{ field.label }}</span>
+          <span class="mt-1 block text-xs uppercase tracking-[0.18em] text-muted">{{ field.type }}</span>
+        </span>
       </button>
     </div>
   </aside>

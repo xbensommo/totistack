@@ -1,29 +1,46 @@
 <template>
-  <AuthCard title="Sign in" description="Use email and password or one of the enabled providers.">
-    <form class="space-y-4" @submit.prevent="handleSubmit">
-      <AuthField v-model="form.email" label="Email address" type="email" autocomplete="email" :error="errors.email" />
-      <AuthField v-model="form.password" label="Password" type="password" autocomplete="current-password" :error="errors.password" />
+  <AuthCard
+    eyebrow="Welcome back"
+    title="Sign in to your workspace"
+    description="Use your email and password or continue with one of the enabled providers."
+  >
+    <form class="space-y-5" @submit.prevent="handleSubmit">
+      <AuthField
+        v-model="form.email"
+        label="Email address"
+        type="email"
+        autocomplete="email"
+        placeholder="you@company.com"
+        :error="errors.email"
+      />
+      <AuthField
+        v-model="form.password"
+        label="Password"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Enter your password"
+        :error="errors.password"
+      />
 
-      <div class="flex items-center justify-between text-sm">
-        <RouterLink class="font-medium text-slate-700 hover:text-slate-900" to="/auth/forgot-password">
+      <div class="flex items-center justify-between gap-4 text-sm">
+        <RouterLink class="font-semibold text-soft transition hover:text-primary" to="/auth/forgot-password">
           Forgot password?
         </RouterLink>
-        <RouterLink class="font-medium text-slate-700 hover:text-slate-900" to="/auth/register">
+        <RouterLink class="font-semibold text-soft transition hover:text-primary" to="/auth/register">
           Create account
         </RouterLink>
       </div>
 
-      <button
-        type="submit"
-        class="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-        :disabled="loading"
-      >
+      <button type="submit" class="btn-primary w-full" :disabled="loading">
         {{ loading ? 'Signing in...' : 'Sign in' }}
       </button>
     </form>
 
-    <div v-if="socialProviders.length" class="my-6 border-t border-slate-200 pt-6">
-      <p class="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Or continue with</p>
+    <div v-if="socialProviders.length" class="mt-8 border-t border-theme pt-6">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <p class="text-caption">Or continue with</p>
+        <span class="h-px flex-1 bg-[var(--color-border)]"></span>
+      </div>
       <SocialAuthButtons :loading="loading" :providers="socialProviders" @select="handleSocial" />
     </div>
   </AuthCard>

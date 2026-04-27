@@ -1,16 +1,20 @@
 <template>
-  <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+  <article class="metric-card">
     <div class="flex items-start justify-between gap-4">
       <div>
-        <p class="text-sm font-medium text-slate-500">{{ label }}</p>
-        <p class="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{{ value }}</p>
+        <p class="stat-title">{{ label }}</p>
+        <p class="stat-value">{{ value }}</p>
       </div>
-      <div v-if="icon" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600">
+
+      <div
+        v-if="icon"
+        class="inline-flex min-h-[2.5rem] items-center rounded-full bg-[rgba(109,94,252,0.08)] px-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary"
+      >
         {{ icon }}
       </div>
     </div>
 
-    <p v-if="hint" class="mt-3 text-xs leading-5 text-slate-500">
+    <p v-if="hint" class="mt-4 text-sm leading-6 text-muted">
       {{ hint }}
     </p>
   </article>

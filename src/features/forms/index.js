@@ -5,6 +5,7 @@
 import manifest from './feature.manifest.js'
 import routes from './routes.js'
 import { createFormsService } from './services/formsService.js'
+import { createFormsActionDefinitions } from './forms.actions.js'
 
 export { manifest, routes, createFormsService }
 
@@ -18,4 +19,6 @@ export default {
   manifest,
   routes,
   createServices,
+  createActionDefinitions: createFormsActionDefinitions,
 }
+export { createFormsActionDefinitions }

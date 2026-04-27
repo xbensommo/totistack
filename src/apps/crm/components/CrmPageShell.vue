@@ -1,35 +1,41 @@
 <template>
-  <section class="space-y-6">
-    <header class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-      <div class="space-y-2">
-        <p v-if="eyebrow" class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+  <section class="page-wrap space-y-8">
+    <header class="hero-panel page-header">
+      <div class="space-y-3">
+        <span v-if="eyebrow" class="section-label">
           {{ eyebrow }}
-        </p>
-        <h1 class="text-3xl font-semibold tracking-tight text-slate-900">
-          {{ title }}
-        </h1>
-        <p v-if="description" class="max-w-3xl text-sm leading-6 text-slate-600">
-          {{ description }}
-        </p>
+        </span>
+
+        <div class="space-y-2">
+          <h1 class="page-title">
+            {{ title }}
+          </h1>
+
+          <p v-if="description" class="page-subtitle max-w-3xl">
+            {{ description }}
+          </p>
+        </div>
       </div>
 
-      <div v-if="$slots.actions" class="flex flex-wrap items-center gap-3">
+      <div v-if="$slots.actions" class="w-full lg:w-auto">
         <slot name="actions" />
       </div>
     </header>
 
-    <slot />
+    <div class="space-y-8">
+      <slot />
+    </div>
   </section>
 </template>
 
 <script setup>
 /**
- * Generic page shell for CRM starter pages.
+ * Page header component updated for the Totistack design system.
  */
 defineProps({
   eyebrow: {
     type: String,
-    default: 'CRM',
+    default: 'Dashboard',
   },
   title: {
     type: String,

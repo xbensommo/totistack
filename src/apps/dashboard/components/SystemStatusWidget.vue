@@ -4,18 +4,18 @@
       <article
         v-for="item in items"
         :key="item.id"
-        class="rounded-xl border border-slate-100 bg-slate-50 p-4"
+        class="list-row items-start bg-surface-2"
       >
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h4 class="text-sm font-semibold text-slate-900">
+            <h4 class="text-sm font-semibold text-[var(--color-text)]">
               {{ item.label }}
             </h4>
-            <p class="mt-1 text-sm text-slate-600">
+            <p class="mt-1 text-sm leading-6 text-soft">
               {{ item.detail }}
             </p>
           </div>
-          <span class="rounded-full px-2.5 py-1 text-xs font-medium" :class="badgeClass(item.status)">
+          <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium" :class="badgeClass(item.status)">
             {{ item.status }}
           </span>
         </div>
@@ -42,15 +42,15 @@ defineProps({
 function badgeClass(status) {
   switch (status) {
     case 'healthy':
-      return 'bg-emerald-100 text-emerald-700';
+      return 'badge-success';
     case 'warning':
-      return 'bg-amber-100 text-amber-700';
+      return 'badge-warning';
     case 'disabled':
-      return 'bg-slate-100 text-slate-700';
+      return 'badge';
     case 'starting':
-      return 'bg-sky-100 text-sky-700';
+      return 'badge-primary';
     default:
-      return 'bg-rose-100 text-rose-700';
+      return 'badge-danger';
   }
 }
 </script>

@@ -1,27 +1,33 @@
 <template>
-  <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <div class="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+  <section class="card">
+    <div class="flex flex-col gap-4 border-b border-theme pb-5 md:flex-row md:items-start md:justify-between">
       <div>
-        <h3 class="text-lg font-semibold text-slate-900">Form structure</h3>
-        <p class="text-sm text-slate-500">Arrange fields, edit labels, and tune validation rules.</p>
+        <h3 class="section-title">Form structure</h3>
+        <p class="mt-1 text-sm text-muted">Arrange fields, edit labels, and tune validation rules.</p>
       </div>
-      <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-600">{{ modelValue.length }} fields</span>
+      <span class="badge badge-primary">{{ modelValue.length }} fields</span>
     </div>
 
     <div v-if="modelValue.length" class="mt-5 space-y-4">
-      <article v-for="(field, index) in modelValue" :key="field.id || `${field.key}-${index}`" class="rounded-2xl border border-slate-200 p-4">
+      <article
+        v-for="(field, index) in modelValue"
+        :key="field.id || `${field.key}-${index}`"
+        class="card-soft"
+      >
         <div class="grid gap-4 md:grid-cols-2">
-          <label class="space-y-2 text-sm font-medium text-slate-700">
-            <span>Label</span>
-            <input v-model="field.label" type="text" class="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0" />
+          <label>
+            <span class="field-label">Label</span>
+            <input v-model="field.label" type="text" class="input-field" />
           </label>
-          <label class="space-y-2 text-sm font-medium text-slate-700">
-            <span>Key</span>
-            <input v-model="field.key" type="text" class="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0" />
+
+          <label>
+            <span class="field-label">Key</span>
+            <input v-model="field.key" type="text" class="input-field" />
           </label>
-          <label class="space-y-2 text-sm font-medium text-slate-700">
-            <span>Type</span>
-            <select v-model="field.type" class="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0">
+
+          <label>
+            <span class="field-label">Type</span>
+            <select v-model="field.type" class="select-field">
               <option value="text">Text</option>
               <option value="email">Email</option>
               <option value="textarea">Textarea</option>
@@ -30,25 +36,42 @@
               <option value="file">File</option>
             </select>
           </label>
-          <label class="space-y-2 text-sm font-medium text-slate-700">
-            <span>Placeholder</span>
-            <input v-model="field.placeholder" type="text" class="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0" />
+
+          <label>
+            <span class="field-label">Placeholder</span>
+            <input v-model="field.placeholder" type="text" class="input-field" />
           </label>
         </div>
-        <div class="mt-4 flex flex-wrap items-center gap-3">
-          <label class="inline-flex items-center gap-2 text-sm text-slate-600">
-            <input v-model="field.isRequired" type="checkbox" class="rounded border-slate-300" />
-            Required
+
+        <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-theme pt-4">
+          <label class="checkbox-field">
+            <input v-model="field.isRequired" type="checkbox" class="sr-only" />
+            <span class="checkbox-ui">
+              <i v-if="field.isRequired" class="fas fa-check text-[10px] text-primary"></i>
+            </span>
+            <span>Required</span>
           </label>
-          <button type="button" class="rounded-xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50" @click="$emit('remove', index)">
+
+          <button
+            type="button"
+            class="btn-danger btn-sm"
+            @click="$emit('remove', index)"
+          >
+            <i class="fas fa-trash-can text-xs"></i>
             Remove field
           </button>
         </div>
       </article>
     </div>
 
-    <div v-else class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-      Start by adding a field from the library.
+    <div v-else class="empty-state mt-6 py-10">
+      <div
+        class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(109,94,252,0.08)] text-primary"
+      >
+        <i class="fas fa-square-plus text-lg"></i>
+      </div>
+      <h4 class="text-lg font-semibold text-[var(--color-text)]">No fields added yet</h4>
+      <p class="mt-2 text-sm text-muted">Start by adding a field from the library.</p>
     </div>
   </section>
 </template>

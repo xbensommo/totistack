@@ -1,0 +1,7 @@
+/** @file functions/src/core/hash.js */
+
+import { createHash } from 'node:crypto'
+
+export function sha256(value) {
+  return createHash('sha256').update(String(value)).digest('hex')
+}

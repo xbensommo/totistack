@@ -5,16 +5,9 @@
 
 import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider'
 
-/**
- * Booking records.
- *
- * Notes:
- * - The root application provides the single shard provider instance.
- * - This file declares the collection only; it does not create actions.
- */
 export default defineCollection({
   name: 'bookings',
-  shard: { type: 'monthly' },
+  shard: { type: 'none' },
   schema: {
     bookingNumber: {
       type: FIELD_TYPES.STRING,
@@ -27,6 +20,40 @@ export default defineCollection({
       type: FIELD_TYPES.STRING,
       required: true,
       filterable: true,
+    },
+    customerType: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+      sortable: true,
+    },
+    ownerUserId: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    ownerEmail: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      searchable: true,
+    },
+    accessCode: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+      searchable: true,
+    },
+    bookingChannel: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+      sortable: true,
+    },
+    bookingSource: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+      sortable: true,
     },
     customerName: {
       type: FIELD_TYPES.STRING,
@@ -44,6 +71,28 @@ export default defineCollection({
       required: false,
       searchable: true,
     },
+    serviceId: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    serviceName: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      searchable: true,
+      sortable: true,
+    },
+    locationId: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    locationName: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      searchable: true,
+      sortable: true,
+    },
     resourceId: {
       type: FIELD_TYPES.STRING,
       required: false,
@@ -53,6 +102,17 @@ export default defineCollection({
       type: FIELD_TYPES.STRING,
       required: false,
       filterable: true,
+      sortable: true,
+    },
+    assignedTo: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+    },
+    assignedToName: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      searchable: true,
       sortable: true,
     },
     title: {
@@ -73,6 +133,7 @@ export default defineCollection({
     specialRequests: {
       type: FIELD_TYPES.STRING,
       required: false,
+      searchable: true,
     },
     timezone: {
       type: FIELD_TYPES.STRING,
@@ -97,10 +158,16 @@ export default defineCollection({
       sortable: true,
       filterable: true,
     },
+    attendeeCount: {
+      type: FIELD_TYPES.NUMBER,
+      required: false,
+      sortable: true,
+      filterable: true,
+    },
     status: {
       type: FIELD_TYPES.STRING,
       required: true,
-      enum: ['pending', 'confirmed', 'checked_in', 'completed', 'cancelled', 'no_show'],
+      enum: ['pending', 'confirmed', 'checked_in', 'completed', 'cancelled', 'no_show', 'rescheduled'],
       filterable: true,
       sortable: true,
     },
@@ -118,16 +185,41 @@ export default defineCollection({
     paymentStatus: {
       type: FIELD_TYPES.STRING,
       required: false,
-      enum: ['pending', 'paid', 'failed', 'refunded'],
+      enum: ['pending', 'deposit_due', 'paid', 'failed', 'refunded'],
       filterable: true,
     },
     attendees: {
       type: FIELD_TYPES.ARRAY,
       required: false,
     },
+    reminderChannels: {
+      type: FIELD_TYPES.ARRAY,
+      required: false,
+    },
     reminders: {
       type: FIELD_TYPES.ARRAY,
       required: false,
+    },
+    reminderStatus: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      filterable: true,
+      sortable: true,
+    },
+    reminderSummary: {
+      type: FIELD_TYPES.STRING,
+      required: false,
+      searchable: true,
+    },
+    reminderLastScheduledAt: {
+      type: FIELD_TYPES.TIMESTAMP,
+      required: false,
+      filterable: true,
+    },
+    reminderLastSentAt: {
+      type: FIELD_TYPES.TIMESTAMP,
+      required: false,
+      filterable: true,
     },
     confirmedAt: {
       type: FIELD_TYPES.TIMESTAMP,
@@ -197,11 +289,23 @@ export default defineCollection({
   writableFields: [
     'bookingNumber',
     'clientId',
+    'customerType',
+    'ownerUserId',
+    'ownerEmail',
+    'accessCode',
+    'bookingChannel',
+    'bookingSource',
     'customerName',
     'customerEmail',
     'customerPhone',
+    'serviceId',
+    'serviceName',
+    'locationId',
+    'locationName',
     'resourceId',
     'resourceType',
+    'assignedTo',
+    'assignedToName',
     'title',
     'description',
     'notes',
@@ -210,12 +314,18 @@ export default defineCollection({
     'startTime',
     'endTime',
     'durationMinutes',
+    'attendeeCount',
     'status',
     'amount',
     'currency',
     'paymentStatus',
     'attendees',
+    'reminderChannels',
     'reminders',
+    'reminderStatus',
+    'reminderSummary',
+    'reminderLastScheduledAt',
+    'reminderLastSentAt',
     'confirmedAt',
     'confirmedBy',
     'cancelledAt',
@@ -228,11 +338,23 @@ export default defineCollection({
   ],
   updateableFields: [
     'clientId',
+    'customerType',
+    'ownerUserId',
+    'ownerEmail',
+    'accessCode',
+    'bookingChannel',
+    'bookingSource',
     'customerName',
     'customerEmail',
     'customerPhone',
+    'serviceId',
+    'serviceName',
+    'locationId',
+    'locationName',
     'resourceId',
     'resourceType',
+    'assignedTo',
+    'assignedToName',
     'title',
     'description',
     'notes',
@@ -241,12 +363,18 @@ export default defineCollection({
     'startTime',
     'endTime',
     'durationMinutes',
+    'attendeeCount',
     'status',
     'amount',
     'currency',
     'paymentStatus',
     'attendees',
+    'reminderChannels',
     'reminders',
+    'reminderStatus',
+    'reminderSummary',
+    'reminderLastScheduledAt',
+    'reminderLastSentAt',
     'confirmedAt',
     'confirmedBy',
     'cancelledAt',
@@ -261,17 +389,33 @@ export default defineCollection({
     { fields: ['clientId', 'startTime'] },
     { fields: ['status', 'startTime'] },
     { fields: ['resourceId', 'startTime'] },
-    { fields: ['createdBy', 'createdAt'] },
+    { fields: ['serviceId', 'startTime'] },
+    { fields: ['assignedTo', 'startTime'] },
+    { fields: ['bookingChannel', 'startTime'] },
     { fields: ['paymentStatus', 'startTime'] },
+    { fields: ['createdBy', 'createdAt'] },
   ],
   search: {
     mode: 'token-array',
-    fields: ['bookingNumber', 'customerName', 'customerEmail', 'title', 'description'],
+    fields: [
+      'bookingNumber',
+      'accessCode',
+      'customerName',
+      'customerEmail',
+      'customerPhone',
+      'serviceName',
+      'locationName',
+      'title',
+      'description',
+      'specialRequests',
+      'reminderSummary',
+    ],
   },
   rules: {
     read: 'auth',
-    create: 'auth',
+    create: 'public',
     update: 'ownerOrAdmin',
     delete: 'ownerOrAdmin',
   },
 })
+ 

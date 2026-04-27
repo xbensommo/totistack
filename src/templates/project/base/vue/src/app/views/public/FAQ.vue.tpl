@@ -46,7 +46,7 @@
 </template>
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useHead } from '@vueuse/head';
+import { useHead } from '@unhead/vue';
 import { gsap } from 'gsap';
 
 const activeIndex = ref(0);

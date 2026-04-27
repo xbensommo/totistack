@@ -1,26 +1,50 @@
 <template>
-  <section class="mx-auto max-w-3xl space-y-6 px-4 py-10">
-    <header class="space-y-3">
-      <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Public form</p>
-      <h1 class="text-3xl font-semibold tracking-tight text-slate-900">{{ form?.name || 'Form' }}</h1>
-      <p class="text-sm leading-6 text-slate-600">{{ form?.description }}</p>
-    </header>
+  <section class="container-premium py-8 md:py-12">
+    <div class="mx-auto max-w-3xl space-y-6">
+      <header class="hero-panel">
+        <p class="section-label">Public form</p>
+        <h1 class="mt-4 display-section text-3xl md:text-5xl">{{ form?.name || 'Form' }}</h1>
+        <p class="mt-3 text-lead text-base md:text-lg">{{ form?.description }}</p>
+      </header>
 
-    <form v-if="form" class="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" @submit.prevent="handleSubmit">
-      <div v-for="field in fields" :key="field.id" class="space-y-2">
-        <label class="block text-sm font-medium text-slate-700">{{ field.label }}</label>
-        <input
-          v-if="field.type !== 'textarea'"
-          v-model="payload[field.key]"
-          :type="field.type === 'email' ? 'email' : 'text'"
-          class="w-full rounded-xl border border-slate-200 px-3 py-2"
-          :required="field.isRequired"
-        />
-        <textarea v-else v-model="payload[field.key]" rows="4" class="w-full rounded-xl border border-slate-200 px-3 py-2" :required="field.isRequired"></textarea>
-      </div>
-      <button type="submit" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">{{ form.settings?.submitButtonText || 'Submit' }}</button>
-      <p v-if="submitted" class="text-sm font-medium text-emerald-600">{{ form.settings?.successMessage || 'Submitted successfully.' }}</p>
-    </form>
+      <form v-if="form" class="form-shell max-w-none" @submit.prevent="handleSubmit">
+        <div class="space-y-5">
+          <div v-for="field in fields" :key="field.id" class="form-section space-y-3">
+            <label class="field-label">{{ field.label }}</label>
+
+            <input
+              v-if="field.type !== 'textarea'"
+              v-model="payload[field.key]"
+              :type="field.type === 'email' ? 'email' : 'text'"
+              class="input-field"
+              :placeholder="field.placeholder || `Enter ${field.label}`"
+              :required="field.isRequired"
+            />
+
+            <textarea
+              v-else
+              v-model="payload[field.key]"
+              rows="4"
+              class="textarea-field"
+              :placeholder="field.placeholder || `Enter ${field.label}`"
+              :required="field.isRequired"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-wrap items-center gap-3">
+          <button type="submit" class="btn-primary btn-lg">
+            <i class="fas fa-paper-plane text-xs"></i>
+            {{ form.settings?.submitButtonText || 'Submit' }}
+          </button>
+
+          <p v-if="submitted" class="alert alert-success flex-1">
+            <i class="fas fa-circle-check mt-0.5"></i>
+            <span>{{ form.settings?.successMessage || 'Submitted successfully.' }}</span>
+          </p>
+        </div>
+      </form>
+    </div>
   </section>
 </template>
 

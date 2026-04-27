@@ -10,7 +10,7 @@ import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider';
 
 export const ticketsCollection = defineCollection({
   name: 'tickets',
-  shard: { type: 'monthly', field: 'createdAt' },
+  shard: { type: 'none' },
   schema: {
     id: { type: FIELD_TYPES.STRING, required: true },
     ticketNumber: { type: FIELD_TYPES.STRING, required: true, unique: true },
@@ -70,7 +70,7 @@ export const ticketsCollection = defineCollection({
 
 export const ticketMessagesCollection = defineCollection({
   name: 'ticketMessages',
-  shard: { type: 'monthly', field: 'createdAt' },
+  shard: { type: 'none' },
   schema: {
     id: { type: FIELD_TYPES.STRING, required: true },
     ticketId: { type: FIELD_TYPES.STRING, required: true, filterable: true },

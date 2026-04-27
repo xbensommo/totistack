@@ -1,14 +1,10 @@
 <template>
-  <section class="p-6 space-y-4">
-    <header class="space-y-1">
-      <p class="text-xs uppercase tracking-[0.3em] opacity-60">CRM</p>
-      <h1 class="text-2xl font-semibold">Activities</h1>
-      <p class="opacity-70">Review CRM calls, notes, meetings, and tasks.</p>
+  <section class="page-wrap space-y-8">
+    <header class="hero-panel space-y-4">
+      <span class="section-label">CRM</span>
+      <div><h1 class="page-title">Activities</h1><p class="page-subtitle">Review CRM calls, notes, meetings, and tasks.</p></div>
     </header>
-
-    <div class="rounded-2xl border p-4 opacity-80">
-      Starter page. Extend this view inside the CRM app without changing Totistack core.
-    </div>
+    <section class="empty-state"><i class="fa fa-sparkles text-3xl text-primary"></i><p class="mt-4 text-sm text-muted">Starter page. Extend this view inside the CRM app without changing Totistack core.</p></section>
   </section>
 </template>
 

@@ -5,14 +5,19 @@
         v-for="item in items"
         :key="item.id"
         :to="item.to"
-        class="block rounded-xl border border-slate-100 bg-slate-50 p-4 transition hover:border-slate-200 hover:bg-white"
+        class="list-row group block bg-surface-2"
       >
-        <h4 class="text-sm font-semibold text-slate-900">
-          {{ item.label }}
-        </h4>
-        <p class="mt-1 text-sm text-slate-600">
-          {{ item.description }}
-        </p>
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h4 class="text-sm font-semibold text-[var(--color-text)] transition-theme group-hover:text-primary">
+              {{ item.label }}
+            </h4>
+            <p class="mt-1 text-sm leading-6 text-soft">
+              {{ item.description }}
+            </p>
+          </div>
+          <span class="badge badge-primary">Open</span>
+        </div>
       </RouterLink>
     </div>
   </DashboardWidgetCard>

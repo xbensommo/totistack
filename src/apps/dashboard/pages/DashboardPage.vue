@@ -5,16 +5,10 @@
     description="A generic, production-ready dashboard starter wired for the latest Totistack generated assembly flow."
   >
     <template #actions>
-      <RouterLink
-        to="/dashboard/reports"
-        class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-      >
+      <RouterLink to="/dashboard/reports" class="btn-secondary">
         Open Reports
       </RouterLink>
-      <RouterLink
-        to="/dashboard/analytics"
-        class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-      >
+      <RouterLink to="/dashboard/analytics" class="btn-primary">
         View Analytics
       </RouterLink>
     </template>

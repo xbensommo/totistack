@@ -10,7 +10,7 @@ import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider';
 
 export const inventoryItemsCollection = defineCollection({
   name: 'inventoryItems',
-  shard: { type: 'monthly', field: 'createdAt' },
+  shard: { type: 'none' },
   schema: {
     id: { type: FIELD_TYPES.STRING, required: true },
     sku: { type: FIELD_TYPES.STRING, required: true, unique: true, filterable: true },
@@ -56,7 +56,7 @@ export const inventoryItemsCollection = defineCollection({
 
 export const purchaseOrdersCollection = defineCollection({
   name: 'purchaseOrders',
-  shard: { type: 'monthly', field: 'createdAt' },
+  shard: { type: 'none' },
   schema: {
     id: { type: FIELD_TYPES.STRING, required: true },
     poNumber: { type: FIELD_TYPES.STRING, required: true, unique: true },
@@ -110,7 +110,7 @@ export const suppliersCollection = defineCollection({
 
 export const inventoryTransactionsCollection = defineCollection({
   name: 'inventoryTransactions',
-  shard: { type: 'monthly', field: 'timestamp' },
+  shard: { type: 'none' },
   schema: {
     id: { type: FIELD_TYPES.STRING, required: true },
     itemId: { type: FIELD_TYPES.STRING, required: true, filterable: true },

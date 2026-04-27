@@ -1,0 +1,234 @@
+# Totistack Confirm Action Pipeline
+
+Enterprise-grade shared confirmation and action execution layer for Totistack.
+
+## What this solves
+
+This package avoids scattering `await confirm()` and feature-specific modal state across the codebase.
+
+Instead, sensitive actions go through one controlled path:
+
+- component triggers action by type
+- pipeline checks policy/confirmation
+- global confirm modal asks user
+- executor runs only after approval
+- success/error hooks remain centralized
+
+That means you do **not** edit thousands of files. You add the pipeline once, mount one modal once, then patch only critical actions.
+
+## Folder structure
+
+```text
+src/
+  core/
+    actions/
+    composables/
+    plugins/
+    ui/modals/
+  examples/
+  index.js
+tests/
+```
+
+## Architecture
+
+### 1. Global modal host
+Mount `ConfirmModal.vue` once in the root app shell or app layout.
+
+### 2. Shared action executor
+Install the pipeline once in `main.js` or the Totistack runtime bootstrap.
+
+### 3. Action definitions per app/feature
+Each app or feature contributes definitions like:
+
+- `crm.client.approve`
+- `auth.user.change-role`
+- `crm.lead.archive`
+- `auth.user.disable`
+
+### 4. Thin UI
+Buttons/pages can still call the executor directly:
+
+```js
+await actions.execute({
+  type: 'auth.user.change-role',
+  target: user,
+  payload: { nextRole: 'admin' },
+  services: { auth, toast },
+})
+```
+
+But the simpler default is now:
+
+```js
+const runAction = useRunAction()
+
+await runAction('auth.user.change-role', { nextRole: 'admin' }, {
+  target: user,
+  services: { auth, toast },
+})
+```
+
+For plain confirmation without registering an action:
+
+```js
+const confirmAction = useConfirmAction()
+const approved = await confirmAction({
+  title: 'Archive lead',
+  message: 'This will remove the lead from the active pipeline.',
+  confirmText: 'Archive',
+  variant: 'warning',
+})
+```
+
+No modal state. No local confirm logic. No copy-paste popups.
+
+## Install in Totistack
+
+### Step 1: Copy files
+Copy the `src/core/*` files into your Totistack project. Recommended drop-in paths:
+
+```text
+src/core/actions/
+src/core/composables/
+src/core/plugins/
+src/core/ui/modals/
+```
+
+### Step 2: Install once in your root bootstrap
+Use the example in `src/examples/usage.main.js`.
+
+Typical Totistack install:
+
+```js
+import { installActionPipeline } from '@/core/plugins/action-plugin.js'
+import { createAuthActionDefinitions } from '@/features/auth/auth.actions.js'
+import { createCrmActionDefinitions } from '@/apps/crm/crm.actions.js'
+
+installActionPipeline(app, {
+  actions: [
+    ...createAuthActionDefinitions(),
+    ...createCrmActionDefinitions(),
+  ],
+  normalizeError(error) {
+    return error instanceof Error ? error : new Error('Action failed.')
+  },
+})
+```
+
+### Step 3: Mount one modal in the root shell
+Use the example in `src/examples/usage.app-shell.vue`.
+
+```vue
+<template>
+  <RouterView />
+  <ConfirmModal />
+</template>
+```
+
+### Step 4: Patch only sensitive actions
+Use action execution from the component/page/service that starts the action.
+
+## Where this fits in Totistack
+
+Recommended placement based on your current framework direction:
+
+```text
+src/
+  core/
+    actions/
+    composables/
+    plugins/
+    ui/modals/
+  features/
+    auth/
+      auth.actions.js
+  apps/
+    crm/
+      crm.actions.js
+```
+
+This matches your preference for shared core infrastructure plus per-feature/app contributions.
+
+## Why this is enterprise-level
+
+Because confirmation is treated as **action policy**, not random UI behavior.
+
+The modal is just a delivery mechanism.
+
+The real contract is:
+
+- action type
+- action context
+- optional confirmation policy
+- run handler
+- success/error hooks
+
+That keeps UI thin and centralizes critical business execution.
+
+## Examples included
+
+- `src/examples/auth/auth.actions.js`
+- `src/examples/crm/crm.actions.js`
+- `src/examples/usage.auth-page.vue`
+- `src/examples/usage.crm-page.vue`
+- `src/examples/usage.main.js`
+- `src/examples/usage.app-shell.vue`
+
+## Notes for smooth integration
+
+1. Keep your business logic in existing services and stores.
+   The action definitions should call them, not replace them.
+
+2. Do not put Firebase logic in the modal.
+   The modal returns only approval or rejection.
+
+3. Start with high-risk actions only.
+   Examples:
+   - change role
+   - approve client
+   - archive lead
+   - delete record
+   - disable user
+
+4. Later, you can add:
+   - audit logging hooks
+   - permission checks before confirmation
+   - analytics events
+   - typed confirmations for destructive actions
+
+## Tests
+
+Run:
+
+```bash
+npm test
+```
+
+Included tests verify:
+
+- guarded actions confirm before running
+- cancelled actions do not run
+- context passes correctly
+- modal store resolves promise correctly
+- errors can be normalized centrally
+
+## Suggested next patch points in your codebase
+
+Based on your current Totistack direction, the first good places to wire this are:
+
+- auth admin pages where roles/status change
+- CRM approval/archive/delete actions
+- future booking cancellation/refund flows
+
+## Blunt truth
+
+This is stronger than scattered `await confirm()` calls, but still simple enough not to damage your framework.
+
+It gives you:
+
+- one modal
+- one pipeline
+- one contract
+- minimal file churn
+- clean long-term scaling

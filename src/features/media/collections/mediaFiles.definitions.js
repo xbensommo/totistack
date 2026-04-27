@@ -3,7 +3,7 @@ import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider'
 /** @file media/collections/mediaFiles.definitions.js */
 export default defineCollection({
   name: 'mediaFiles',
-  shard: { type: 'monthly' },
+  shard: { type: 'none' },
   schema: {
     folderId: { type: FIELD_TYPES.STRING, required: false, filterable: true },
     name: { type: FIELD_TYPES.STRING, required: true, searchable: true },

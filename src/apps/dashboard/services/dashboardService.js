@@ -69,12 +69,9 @@ function pickCollectionName(store, candidates = []) {
  * @returns {Record<string, any>[]}
  */
 function getCollectionItems(store, collectionName) {
-  if (!collectionName || !store?.[collectionName]?.value) {
-    return [];
-  }
-
-  const bucket = store[collectionName].value;
-  return Array.isArray(bucket?.items) ? bucket.items : [];
+  const bucket = store?.[collectionName]
+  const items = bucket?.items || bucket?.value?.items || bucket?.value || bucket
+  return Array.isArray(items) ? items : []
 }
 
 /**
@@ -90,7 +87,8 @@ async function ensureCollectionLoaded(store, collectionName) {
   const items = getCollectionItems(store, collectionName);
   if (items.length > 0) return;
 
-  const actions = store.getCollectionActions?.(collectionName) || store?.[`${collectionName}Actions`];
+  const actionKey = `${collectionName}Actions`;
+  const actions = store?.[actionKey];
   if (actions?.fetchInitialPage) {
     await actions.fetchInitialPage();
   }

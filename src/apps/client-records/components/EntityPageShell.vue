@@ -1,15 +1,15 @@
 <template>
-  <section class="space-y-6">
-    <header class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-start md:justify-between">
-      <div class="space-y-2">
-        <p v-if="eyebrow" class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+  <section class="page-wrap space-y-6">
+    <header class="hero-panel page-header">
+      <div class="space-y-3">
+        <p v-if="eyebrow" class="section-label">
           {{ eyebrow }}
         </p>
-        <div class="space-y-1">
-          <h1 class="text-2xl font-semibold text-slate-900 md:text-3xl">
+        <div class="space-y-2">
+          <h1 class="page-title">
             {{ title }}
           </h1>
-          <p v-if="description" class="max-w-3xl text-sm leading-6 text-slate-600">
+          <p v-if="description" class="page-subtitle">
             {{ description }}
           </p>
         </div>
@@ -20,7 +20,7 @@
       </div>
     </header>
 
-    <div v-if="$slots.filters" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div v-if="$slots.filters" class="card p-4 md:p-5">
       <slot name="filters" />
     </div>
 

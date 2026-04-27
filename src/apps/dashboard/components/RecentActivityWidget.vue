@@ -4,26 +4,28 @@
       <article
         v-for="item in items"
         :key="item.id"
-        class="rounded-xl border border-slate-100 bg-slate-50 p-4"
+        class="list-row items-start bg-surface-2"
       >
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h4 class="text-sm font-semibold text-slate-900">
+            <h4 class="text-sm font-semibold text-[var(--color-text)]">
               {{ item.title }}
             </h4>
-            <p class="mt-1 text-sm text-slate-600">
+            <p class="mt-1 text-sm leading-6 text-soft">
               {{ item.description }}
             </p>
           </div>
-          <span class="whitespace-nowrap text-xs text-slate-500">
+          <span class="whitespace-nowrap text-xs text-muted">
             {{ formatTimestamp(item.timestamp) }}
           </span>
         </div>
       </article>
     </div>
-    <p v-else class="text-sm text-slate-500">
-      No recent activity is available yet.
-    </p>
+    <div v-else class="empty-state px-6 py-10">
+      <p class="text-sm text-muted">
+        No recent activity is available yet.
+      </p>
+    </div>
   </DashboardWidgetCard>
 </template>
 

@@ -1,41 +1,45 @@
 <template>
-  <div class="overflow-hidden rounded-2xl border border-slate-200">
+  <div class="table-wrap">
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-slate-200">
-        <thead class="bg-slate-50">
+      <table class="table-base">
+        <thead>
           <tr>
-            <th v-for="column in columns" :key="column.key" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <th v-for="column in columns" :key="column.key">
               {{ column.label }}
             </th>
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-slate-200 bg-white">
+        <tbody>
           <tr
             v-for="item in items"
             :key="item.id || item.bookingNumber"
-            class="transition hover:bg-slate-50"
           >
-            <td class="px-4 py-3 text-sm font-medium text-slate-900">
-              {{ item.bookingNumber || '—' }}
+            <td class="min-w-[170px]">
+              <div class="font-semibold text-[var(--color-text)]">{{ item.bookingNumber || '—' }}</div>
+              <div class="mt-2 inline-flex rounded-full bg-[rgba(109,94,252,0.08)] px-2.5 py-1 text-[11px] font-semibold tracking-[0.12em] text-primary">
+                {{ item.accessCode || 'No code' }}
+              </div>
             </td>
-            <td class="px-4 py-3 text-sm text-slate-700">
-              <div class="font-medium text-slate-900">{{ item.title || 'Untitled booking' }}</div>
-              <div class="text-xs text-slate-500">{{ item.customerName || item.customerEmail || 'Unknown customer' }}</div>
+            <td class="min-w-[220px]">
+              <div class="font-semibold text-[var(--color-text)]">{{ item.title || item.serviceName || 'Untitled booking' }}</div>
+              <div class="mt-1 text-xs text-muted">{{ item.customerName || item.customerEmail || 'Unknown customer' }}</div>
             </td>
-            <td class="px-4 py-3 text-sm text-slate-700">
-              {{ formatDate(item.startTime) }}
+            <td class="min-w-[220px]">
+              <div class="text-[var(--color-text)]">{{ formatDate(item.startTime) }}</div>
+              <div class="mt-1 text-xs text-muted">{{ item.locationName || item.resourceType || '—' }}</div>
             </td>
-            <td class="px-4 py-3 text-sm text-slate-700">
-              {{ item.resourceType || '—' }}
+            <td class="min-w-[160px]">
+              <div class="capitalize text-[var(--color-text)]">{{ item.bookingChannel || '—' }}</div>
+              <div class="mt-1 text-xs text-muted">{{ item.paymentStatus || 'pending' }}</div>
             </td>
-            <td class="px-4 py-3 text-sm text-slate-700">
+            <td class="whitespace-nowrap font-semibold text-[var(--color-text)]">
               {{ formatMoney(item.amount, item.currency) }}
             </td>
-            <td class="px-4 py-3 text-sm text-slate-700">
+            <td>
               <StatusBadge :status="item.status || 'pending'" />
             </td>
-            <td class="px-4 py-3 text-right text-sm text-slate-700">
+            <td class="text-right">
               <slot name="actions" :item="item" />
             </td>
           </tr>
@@ -62,10 +66,10 @@ defineProps({
 })
 
 const columns = [
-  { key: 'bookingNumber', label: 'Booking' },
-  { key: 'title', label: 'Details' },
-  { key: 'startTime', label: 'Start' },
-  { key: 'resourceType', label: 'Resource' },
+  { key: 'bookingNumber', label: 'Reference' },
+  { key: 'title', label: 'Booking' },
+  { key: 'startTime', label: 'Schedule' },
+  { key: 'bookingChannel', label: 'Channel' },
   { key: 'amount', label: 'Amount' },
   { key: 'status', label: 'Status' },
   { key: 'actions', label: '' },

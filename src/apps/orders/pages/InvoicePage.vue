@@ -91,7 +91,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import { createOrderServices } from '../services/orderService.js'
 
 const route = useRoute()

@@ -1,0 +1,68 @@
+// Totistack server-actions / notifications / audit rules snippet.
+// Merge into your real rules. Adjust claims to your auth model.
+
+function signedIn() {
+  return request.auth != null;
+}
+
+function hasPermission(permission) {
+  return signedIn()
+    && (
+      permission in request.auth.token.permissions
+      || permission in request.auth.token.permissionKeys
+      || request.auth.token.role == 'admin'
+      || ('admin' in request.auth.token.roles)
+    );
+}
+
+match /notifications/{id} {
+  allow read: if signedIn()
+    && (
+      resource.data.recipientUserId == request.auth.uid
+      || hasPermission('notifications.manage')
+    );
+
+  allow create: if signedIn() && hasPermission('notifications.create');
+
+  allow update: if signedIn()
+    && resource.data.recipientUserId == request.auth.uid
+    && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'readAt', 'archivedAt', 'updatedAt']);
+
+  allow delete: if false;
+}
+
+match /notificationTokens/{id} {
+  allow read: if signedIn() && resource.data.userId == request.auth.uid;
+  allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid;
+  allow delete: if false;
+}
+
+match /notificationDeliveries/{id} {
+  allow read: if signedIn() && hasPermission('notifications.manage');
+  allow write: if false;
+}
+
+match /notificationPreferences/{id} {
+  allow read, update: if signedIn() && resource.data.userId == request.auth.uid;
+  allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+  allow delete: if false;
+}
+
+match /actionRequests/{id} {
+  allow read: if signedIn()
+    && (
+      resource.data.actorId == request.auth.uid
+      || hasPermission('serverActions.manage')
+    );
+  allow write: if false;
+}
+
+match /auditLogs/{id} {
+  allow read: if signedIn() && hasPermission('audit.view');
+  allow write: if false;
+}
+
+match /entityActivity/{id} {
+  allow read: if signedIn() && hasPermission('audit.view');
+  allow write: if false;
+}

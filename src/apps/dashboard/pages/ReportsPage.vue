@@ -4,7 +4,7 @@
     title="Reports"
     description="Starter report summaries that can be extended into exports, scheduled reports, or department-specific dashboards."
   >
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div class="kpi-grid xl:grid-cols-3">
       <DashboardStatCard
         v-for="item in reportCards"
         :key="item.id"
@@ -15,10 +15,10 @@
     </div>
 
     <DashboardWidgetCard title="Report Notes" description="These starter notes make the app useful immediately while staying easy to replace later.">
-      <ul class="space-y-3 text-sm leading-6 text-slate-600">
-        <li>Use this page as the handoff point for CSV, PDF, or email report generation later.</li>
-        <li>Metrics are already derived from the root store and generated collection actions.</li>
-        <li>Once project-specific reporting rules are ready, replace these starter cards with targeted report blocks.</li>
+      <ul class="space-y-3 text-sm leading-6 text-soft">
+        <li class="list-row items-start bg-surface-2">Use this page as the handoff point for CSV, PDF, or email report generation later.</li>
+        <li class="list-row items-start bg-surface-2">Metrics are already derived from the root store and generated collection actions.</li>
+        <li class="list-row items-start bg-surface-2">Once project-specific reporting rules are ready, replace these starter cards with targeted report blocks.</li>
       </ul>
     </DashboardWidgetCard>
   </DashboardPageShell>

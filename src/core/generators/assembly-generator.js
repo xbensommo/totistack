@@ -27,7 +27,9 @@ export async function generateAssemblyArtifacts(projectRoot) {
       writeFile(path.join(generatedDir, 'routes.js'), buildRoutesRegistry()),
       writeFile(path.join(generatedDir, 'services.js'), buildServicesRegistry()),
       writeFile(path.join(generatedDir, 'modules.js'), buildModulesRegistry()),
+      writeFile(path.join(generatedDir, 'permissions.js'), buildPermissionsRegistry()),
       writeFile(path.join(generatedDir, 'index.js'), buildIndexRegistry()),
+      writeFile(path.join(generatedDir, 'access-map.js'), buildAccessMapRegistry()),
     ]);
 
     logger.info('Generated build-time assembly artifacts in src/generated');
@@ -260,6 +262,44 @@ export function createGeneratedRoutes(context = {}) {
     return true
   })
 }
+
+  /**
+ * Navigation-ready route records.
+ * Components can import this directly for menus/sidebars.
+ */
+export const links = createGeneratedRoutes()
+
+  export function createAppRoutes(options = {}) {
+  const all = createGeneratedRoutes(options)
+
+  const publicChildren = all.filter(
+    (route) =>
+      route &&
+      typeof route.path === 'string' &&
+      route.meta?.requiresAuth === false
+  )
+
+  const adminChildren = all.filter(
+    (route) =>
+      route &&
+      typeof route.path === 'string' &&
+      route.meta?.requiresAuth !== false
+  )
+
+  return [
+    {
+      path: '/',
+      component: () => import('@/PublicLayOut.vue'),
+      children: publicChildren,
+    },
+    {
+      path: '/',
+      component: () => import('@/MainAppLayOut.vue'),
+      meta: { requiresAuth: true },
+      children: adminChildren,
+    },
+  ]
+}
 `
 }
 
@@ -415,5 +455,161 @@ export * from './collections.js'
 export * from './modules.js'
 export * from './routes.js'
 export * from './services.js'
+export * from './permissions.js'
 `
+}
+
+function buildPermissionsRegistry() {
+  return `/**
+ * @file src/generated/permissions.js
+ * @description Build-time permission assembly for installed apps and features.
+ *
+ * Rules:
+ * - Each app/feature exports a default object from permissions.js
+ * - Registry merges installed modules only
+ * - Roles resolve to permission keys through merged roleTemplates
+ */
+
+const permissionModuleImports = import.meta.glob(
+  [
+    '../apps/*/permissions.js',
+    '../apps/*/permissions/index.js',
+    '../features/*/permissions.js',
+    '../features/*/permissions/index.js',
+  ],
+  { eager: true },
+)
+
+function normalizePermissionEntry(entry, moduleName) {
+  if (!entry || typeof entry !== 'object') return null
+  if (!entry.key || typeof entry.key !== 'string') return null
+
+  return {
+    module: moduleName,
+    key: entry.key,
+    resource: entry.resource || '',
+    action: entry.action || '',
+    description: entry.description || '',
+  }
+}
+
+function normalizeRoleTemplateMap(value) {
+  if (!value || typeof value !== 'object') return {}
+
+  return Object.entries(value).reduce((acc, [roleKey, permissionKeys]) => {
+    acc[roleKey] = Array.isArray(permissionKeys)
+      ? [...new Set(permissionKeys.filter(Boolean))]
+      : []
+    return acc
+  }, {})
+}
+
+function extractPermissionContribution(mod) {
+  const candidate = mod?.default || mod
+  if (!candidate || typeof candidate !== 'object') return null
+
+  const moduleName = candidate.module || ''
+  const permissions = Array.isArray(candidate.permissions)
+    ? candidate.permissions
+        .map((entry) => normalizePermissionEntry(entry, moduleName))
+        .filter(Boolean)
+    : []
+
+  const roleTemplates = normalizeRoleTemplateMap(candidate.roleTemplates)
+
+  return {
+    module: moduleName,
+    permissions,
+    roleTemplates,
+  }
+}
+
+export function createGeneratedPermissions() {
+  const permissions = []
+  const seenPermissionKeys = new Set()
+  const mergedRoleTemplates = {}
+
+  for (const mod of Object.values(permissionModuleImports)) {
+    const contribution = extractPermissionContribution(mod)
+    if (!contribution) continue
+
+    for (const permission of contribution.permissions) {
+      if (seenPermissionKeys.has(permission.key)) continue
+      seenPermissionKeys.add(permission.key)
+      permissions.push(permission)
+    }
+
+    for (const [roleKey, permissionKeys] of Object.entries(contribution.roleTemplates)) {
+      if (!mergedRoleTemplates[roleKey]) {
+        mergedRoleTemplates[roleKey] = []
+      }
+
+      mergedRoleTemplates[roleKey].push(...permissionKeys)
+    }
+  }
+
+  const roleTemplates = Object.entries(mergedRoleTemplates).reduce((acc, [roleKey, keys]) => {
+    acc[roleKey] = [...new Set(keys.filter(Boolean))].sort()
+    return acc
+  }, {})
+
+  return {
+    permissions: permissions.sort((a, b) => a.key.localeCompare(b.key)),
+    roleTemplates,
+  }
+}
+
+export const generatedPermissionsRegistry = createGeneratedPermissions()
+export const generatedPermissions = generatedPermissionsRegistry.permissions
+export const generatedRoleTemplates = generatedPermissionsRegistry.roleTemplates
+
+export function getGeneratedPermissionMap() {
+  return generatedPermissions.reduce((acc, permission) => {
+    acc[permission.key] = permission
+    return acc
+  }, {})
+}
+
+export function getPermissionsForRole(roleKey) {
+  return [...(generatedRoleTemplates[roleKey] || [])]
+}
+
+export function getPermissionsForRoles(roleKeys = []) {
+  const resolved = new Set()
+
+  for (const roleKey of Array.isArray(roleKeys) ? roleKeys : []) {
+    for (const permissionKey of getPermissionsForRole(roleKey)) {
+      resolved.add(permissionKey)
+    }
+  }
+
+  return [...resolved].sort()
+}
+`
+}
+
+function buildAccessMapRegistry() {
+  return `/**
+ * @file src/generated/access-map.js
+ * @description Group generated permissions by module and resource.
+ */
+
+import { generatedPermissions } from './permissions.js'
+
+export function createGeneratedAccessMap() {
+  return generatedPermissions.reduce((acc, permission) => {
+    const moduleKey = permission.module || 'unknown'
+    const resourceKey = permission.resource || 'general'
+
+    if (!acc[moduleKey]) acc[moduleKey] = {}
+    if (!acc[moduleKey][resourceKey]) acc[moduleKey][resourceKey] = []
+
+    acc[moduleKey][resourceKey].push(permission)
+    return acc
+  }, {})
+}
+
+const generatedAccessMap = createGeneratedAccessMap()
+
+export default generatedAccessMap`
 }

@@ -1,18 +1,18 @@
 <template>
-  <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-    <header class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+  <section class="card overflow-hidden p-0">
+    <header class="flex items-center justify-between gap-3 border-b border-theme px-5 py-4 md:px-6">
       <div>
-        <h2 class="text-base font-semibold text-slate-900">
+        <h2 class="section-title text-base md:text-lg">
           {{ title }}
         </h2>
-        <p v-if="description" class="mt-1 text-sm text-slate-500">
+        <p v-if="description" class="mt-1 text-sm text-muted">
           {{ description }}
         </p>
       </div>
       <slot name="header-actions" />
     </header>
 
-    <div class="p-5">
+    <div class="p-5 md:p-6">
       <slot />
     </div>
   </section>

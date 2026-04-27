@@ -10,7 +10,7 @@ import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider';
 
 export const emailCampaignsCollection = defineCollection({
   name: 'emailCampaigns',
-  shard: { type: 'monthly', field: 'createdAt' },
+  shard: { type: 'none' },
   schema: {
     id: { type: FIELD_TYPES.STRING, required: true },
     name: { type: FIELD_TYPES.STRING, required: true, searchable: true },
@@ -69,7 +69,7 @@ export const emailCampaignsCollection = defineCollection({
 
 export const emailSubscribersCollection = defineCollection({
   name: 'emailSubscribers',
-  shard: { type: 'monthly', field: 'createdAt' },
+  shard: { type: 'none' },
   schema: {
     id: { type: FIELD_TYPES.STRING, required: true },
     email: { type: FIELD_TYPES.STRING, required: true, unique: true, filterable: true },
@@ -123,7 +123,7 @@ export const emailTemplatesCollection = defineCollection({
 
 export const emailAnalyticsCollection = defineCollection({
   name: 'emailAnalytics',
-  shard: { type: 'monthly', field: 'timestamp' },
+  shard: { type: 'none' },
   schema: {
     id: { type: FIELD_TYPES.STRING, required: true },
     campaignId: { type: FIELD_TYPES.STRING, required: true, filterable: true },

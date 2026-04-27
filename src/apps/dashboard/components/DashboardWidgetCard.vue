@@ -1,11 +1,11 @@
 <template>
-  <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <header class="mb-4 flex items-start justify-between gap-4">
-      <div>
-        <h3 class="text-lg font-semibold text-slate-900">
+  <article class="chart-card card-hover">
+    <header class="mb-5 flex items-start justify-between gap-4">
+      <div class="space-y-1.5">
+        <h3 class="section-title text-lg md:text-xl">
           {{ title }}
         </h3>
-        <p v-if="description" class="mt-1 text-sm text-slate-600">
+        <p v-if="description" class="text-sm leading-6 text-muted">
           {{ description }}
         </p>
       </div>

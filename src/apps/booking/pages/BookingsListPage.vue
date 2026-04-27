@@ -2,12 +2,12 @@
   <EntityPageShell
     eyebrow="Operations"
     title="Bookings"
-    description="Track reservations, upcoming appointments, and customer activity from one place."
+    description="Track reservations, public booking intake, reminder readiness, and customer activity from one place."
   >
     <template #actions>
       <RouterLink
         to="/bookings/new"
-        class="inline-flex items-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+        class="btn-primary"
       >
         New booking
       </RouterLink>
@@ -16,21 +16,21 @@
     <template #metrics>
       <StatCard label="Total" :value="metrics.total" hint="Visible records in the current store snapshot." icon="All" />
       <StatCard label="Pending" :value="metrics.pending" hint="Require confirmation or follow-up." icon="Queue" />
-      <StatCard label="Confirmed" :value="metrics.confirmed" hint="Ready to be fulfilled." icon="OK" />
-      <StatCard label="Cancelled" :value="metrics.cancelled" hint="Useful for ops and quality review." icon="X" />
+      <StatCard label="Public" :value="metrics.public" hint="Created without a signed-in account." icon="Guest" />
+      <StatCard label="Reminders ready" :value="metrics.reminderReady" hint="Have reminder jobs scheduled." icon="Bell" />
     </template>
 
     <div class="space-y-5">
       <BookingFilters v-model="filters" />
 
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <p class="text-sm text-slate-500">
+      <div class="status-strip">
+        <p class="text-sm text-soft">
           {{ loading ? 'Loading bookings...' : `Showing ${filteredItems.length} bookings` }}
         </p>
 
         <button
           type="button"
-          class="inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+          class="btn-secondary btn-sm"
           @click="reload"
         >
           Refresh
@@ -41,7 +41,7 @@
         <template #actions="{ item }">
           <RouterLink
             :to="`/bookings/${item.id}`"
-            class="inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+            class="btn-outline btn-sm"
           >
             View
           </RouterLink>
@@ -55,7 +55,7 @@
             <template #actions>
               <RouterLink
                 to="/bookings/new"
-                class="inline-flex items-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                class="btn-primary"
               >
                 Create booking
               </RouterLink>
@@ -70,7 +70,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import { createBookingServices } from '../services/bookingService.js'
 import EntityPageShell from '../components/EntityPageShell.vue'
 import StatCard from '../components/StatCard.vue'
@@ -84,6 +84,8 @@ const bookingService = createBookingServices({ store })
 const filters = ref({
   search: '',
   status: '',
+  bookingChannel: '',
+  paymentStatus: '',
   startDate: '',
   endDate: '',
 })
@@ -98,9 +100,13 @@ const filteredItems = computed(() => {
   return sourceItems.value.filter((item) => {
     const haystack = [
       item.bookingNumber,
+      item.accessCode,
       item.title,
+      item.serviceName,
       item.customerName,
       item.customerEmail,
+      item.customerPhone,
+      item.locationName,
     ]
       .filter(Boolean)
       .join(' ')
@@ -108,12 +114,14 @@ const filteredItems = computed(() => {
 
     const searchOk = !filters.value.search || haystack.includes(filters.value.search.toLowerCase())
     const statusOk = !filters.value.status || item.status === filters.value.status
+    const channelOk = !filters.value.bookingChannel || item.bookingChannel === filters.value.bookingChannel
+    const paymentOk = !filters.value.paymentStatus || item.paymentStatus === filters.value.paymentStatus
 
     const startDate = normalizeDate(item.startTime)
     const afterStart = !filters.value.startDate || (startDate && startDate >= new Date(filters.value.startDate))
     const beforeEnd = !filters.value.endDate || (startDate && startDate <= new Date(`${filters.value.endDate}T23:59:59`))
 
-    return searchOk && statusOk && afterStart && beforeEnd
+    return searchOk && statusOk && channelOk && paymentOk && afterStart && beforeEnd
   })
 })
 
@@ -122,8 +130,8 @@ const metrics = computed(() => {
   return {
     total: items.length,
     pending: items.filter((item) => item.status === 'pending').length,
-    confirmed: items.filter((item) => item.status === 'confirmed').length,
-    cancelled: items.filter((item) => item.status === 'cancelled').length,
+    public: items.filter((item) => item.bookingChannel === 'public').length,
+    reminderReady: items.filter((item) => item.reminderStatus === 'scheduled' || item.reminderStatus === 'queued').length,
   }
 })
 
@@ -136,7 +144,7 @@ async function reload() {
     await bookingService.list({
       orderBy: 'startTime',
       orderDirection: 'asc',
-      limit: 30,
+      limit: 50,
     })
   } catch (error) {
     console.error('[BookingListPage] Failed to load bookings.', error)

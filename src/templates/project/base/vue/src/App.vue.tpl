@@ -4,6 +4,7 @@
     <Toaster position="top-center" richColors />
     <RouterView />
     <Cookie />
+    <ConfirmModal />
   </div>
 </template>
 
@@ -15,6 +16,7 @@ import { Toaster, toast } from 'vue-sonner';
 import AppOverlay from '@app/components/Overlay.vue';
 import Cookie from "@app/components/CookieBanner.vue"
 import { useAppStore } from '@app/stores/appStore'
+import ConfirmModal from '@action_modal/ui/modals/ConfirmModal.vue';
 
 const store = useAppStore(); 
 

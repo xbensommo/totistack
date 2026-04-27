@@ -1,37 +1,49 @@
 <template>
-  <AuthCard title="My profile" description="Starter profile page wired into the shared root store.">
+  <AuthCard
+    eyebrow="Account settings"
+    title="Manage your profile"
+    description="Starter profile page wired into the shared root store with a cleaner settings-style layout."
+  >
     <div class="space-y-6">
-      <form class="space-y-4" @submit.prevent="saveProfile">
-        <AuthField v-model="form.displayName" label="Display name" autocomplete="name" />
-        <AuthField v-model="form.firstName" label="First name" autocomplete="given-name" />
-        <AuthField v-model="form.lastName" label="Last name" autocomplete="family-name" />
-        <AuthField v-model="form.phoneNumber" label="Phone number" autocomplete="tel" />
-        <button
-          type="submit"
-          class="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-          :disabled="saving"
-        >
-          {{ saving ? 'Saving profile...' : 'Save profile' }}
-        </button>
-      </form>
+      <section class="form-section">
+        <div class="mb-6">
+          <p class="text-caption">Profile details</p>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--color-text)]">Personal information</h2>
+        </div>
 
-      <form class="space-y-4 border-t border-slate-200 pt-6" @submit.prevent="savePassword">
-        <AuthField v-model="passwordForm.currentPassword" label="Current password" type="password" autocomplete="current-password" />
-        <AuthField v-model="passwordForm.newPassword" label="New password" type="password" autocomplete="new-password" />
-        <button
-          type="submit"
-          class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
-          :disabled="savingPassword"
-        >
-          {{ savingPassword ? 'Updating password...' : 'Change password' }}
-        </button>
-      </form>
+        <form class="space-y-5" @submit.prevent="saveProfile">
+          <AuthField v-model="form.displayName" label="Display name" autocomplete="name" placeholder="Your public display name" />
 
-      <button
-        type="button"
-        class="w-full rounded-2xl border border-red-300 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
-        @click="signOut"
-      >
+          <div class="grid gap-5 sm:grid-cols-2">
+            <AuthField v-model="form.firstName" label="First name" autocomplete="given-name" placeholder="First name" />
+            <AuthField v-model="form.lastName" label="Last name" autocomplete="family-name" placeholder="Last name" />
+          </div>
+
+          <AuthField v-model="form.phoneNumber" label="Phone number" autocomplete="tel" placeholder="+264 ..." />
+
+          <button type="submit" class="btn-primary w-full" :disabled="saving">
+            {{ saving ? 'Saving profile...' : 'Save profile' }}
+          </button>
+        </form>
+      </section>
+
+      <section class="form-section border-theme">
+        <div class="mb-6">
+          <p class="text-caption">Security</p>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--color-text)]">Password update</h2>
+        </div>
+
+        <form class="space-y-5" @submit.prevent="savePassword">
+          <AuthField v-model="passwordForm.currentPassword" label="Current password" type="password" autocomplete="current-password" placeholder="Enter current password" />
+          <AuthField v-model="passwordForm.newPassword" label="New password" type="password" autocomplete="new-password" placeholder="Minimum 8 characters" />
+
+          <button type="submit" class="btn-secondary w-full" :disabled="savingPassword">
+            {{ savingPassword ? 'Updating password...' : 'Change password' }}
+          </button>
+        </form>
+      </section>
+
+      <button type="button" class="btn-outline w-full border-red-400/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10" @click="signOut">
         Sign out
       </button>
     </div>

@@ -23,7 +23,31 @@ const FEATURE_TOOLKIT_TEMPLATE = `/**
  */
 
 /**
+ * Resolve collection state from the root app store.
+ *
+ * @param {object} appStore
+ * @param {string} collectionName
+ * @returns {any|null}
+ */
+export function getCollectionState(appStore, collectionName) {
+  if (!appStore || !collectionName) {
+    return null
+  }
+
+  if (typeof appStore.getCollectionState === 'function') {
+    return appStore.getCollectionState(collectionName)
+  }
+
+  return appStore?.[collectionName] || null
+}
+
+/**
  * Resolve collection actions from the root app store.
+ *
+ * Resolution order:
+ * 1. root-store helper methods
+ * 2. canonical collectionsActions registry keyed by collection name
+ * 3. legacy direct action key \`\${collectionName}Actions\`
  *
  * @param {object} appStore
  * @param {string} collectionName
@@ -34,10 +58,8 @@ export function getCollectionActions(appStore, collectionName) {
     return {}
   }
 
-  const directKey = \`${'${collectionName}'}Actions\`
-  const direct = appStore[directKey]
-  if (direct && typeof direct === 'object') {
-    return direct
+  if (typeof appStore.getCollectionActions === 'function') {
+    return appStore.getCollectionActions(collectionName) || {}
   }
 
   const generated = appStore.collectionsActions?.[collectionName]
@@ -45,7 +67,33 @@ export function getCollectionActions(appStore, collectionName) {
     return generated
   }
 
+  const directKey = \`\${collectionName}Actions\`
+  const direct = appStore[directKey]
+  if (direct && typeof direct === 'object') {
+    return direct
+  }
+
   return {}
+}
+
+/**
+ * Resolve collection actions and throw when the collection is not wired into the root store.
+ *
+ * @param {object} appStore
+ * @param {string} collectionName
+ * @param {string} [contextLabel='collection']
+ * @returns {object}
+ */
+export function requireCollectionActions(appStore, collectionName, contextLabel = 'collection') {
+  const actions = getCollectionActions(appStore, collectionName)
+
+  if (!actions || typeof actions !== 'object' || Object.keys(actions).length === 0) {
+    throw new Error(
+      \`[\${contextLabel}] Missing generated collection actions for "\${collectionName}" on the root store.\`
+    )
+  }
+
+  return actions
 }
 
 /**
@@ -74,7 +122,7 @@ export async function runAction(actions, methodNames, ...args) {
  * @returns {object[]}
  */
 export function getCollectionItems(appStore, collectionName) {
-  const stateSlice = appStore?.[collectionName]
+  const stateSlice = getCollectionState(appStore, collectionName)
 
   if (Array.isArray(stateSlice)) {
     return stateSlice
@@ -143,9 +191,9 @@ export function assertAccess(access, requirement, fallbackMessage = 'You are not
 export function createId(prefix = 'item') {
   const safePrefix = String(prefix).trim() || 'item'
   if (globalThis.crypto?.randomUUID) {
-    return \`${'${safePrefix}'}_\${globalThis.crypto.randomUUID()}\`
+    return \`\${safePrefix}_\${globalThis.crypto.randomUUID()}\`
   }
-  return \`${'${safePrefix}'}_\${Date.now()}_\${Math.random().toString(36).slice(2, 10)}\`
+  return \`\${safePrefix}_\${Date.now()}_\${Math.random().toString(36).slice(2, 10)}\`
 }
 
 /**
@@ -206,7 +254,9 @@ export function normalizeError(error, fallbackMessage = 'An unexpected feature e
 }
 
 export default {
+  getCollectionState,
   getCollectionActions,
+  requireCollectionActions,
   runAction,
   getCollectionItems,
   fetchCollectionItems,

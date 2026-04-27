@@ -1,121 +1,52 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue'
+import { defineStore } from 'pinia'
 
 /**
- * Auth Store
- * @description Manages authentication state using Pinia
+ * Thin auth feature store for local UI state only.
+ * The source of truth remains the root access/app store.
  */
-export const useAuthStore = defineStore('authStore', () => {
-  // State
-  const user = ref(null);
-  const loading = ref(true);
-  const error = ref(null);
-  
-  // Getters
-  const isAuthenticated = computed(() => !!user.value);
-  const currentUser = computed(() => user.value);
-  const userRoles = computed(() => user.value?.roles || []);
-  const isAdmin = computed(() => userRoles.value.includes('admin'));
-  
-  // Actions
-  /**
-   * Initialize auth state listener
-   * @param {AuthService} authService - Auth service instance
-   */
-  const initAuthListener = (authService) => {
-    loading.value = true;
-    
-    authService.onAuthStateChanged((firebaseUser) => {
-      if (firebaseUser) {
-        // Load user data from Firestore
-        loadUserData(firebaseUser.uid, authService);
-      } else {
-        user.value = null;
-        loading.value = false;
-      }
-    });
-  };
-  
-  /**
-   * Load user data from Firestore
-   * @param {string} uid - User ID
-   * @param {AuthService} authService - Auth service instance
-   */
-  const loadUserData = async (uid, authService) => {
-    try {
-      const userDoc = await authService.getUserDoc(uid);
-      user.value = {
-        uid,
-        ...userDoc.data(),
-        ...authService.getCurrentUser()
-      };
-    } catch (err) {
-      console.error('Failed to load user data:', err);
-      error.value = err.message;
-    } finally {
-      loading.value = false;
-    }
-  };
-  
-  /**
-   * Set user data
-   * @param {Object} userData - User data
-   */
-  const setUser = (userData) => {
-    user.value = userData;
-  };
-  
-  /**
-   * Clear user data
-   */
-  const clearUser = () => {
-    user.value = null;
-  };
-  
-  /**
-   * Set loading state
-   * @param {boolean} state - Loading state
-   */
-  const setLoading = (state) => {
-    loading.value = state;
-  };
-  
-  /**
-   * Set error
-   * @param {string} errorMessage - Error message
-   */
-  const setError = (errorMessage) => {
-    error.value = errorMessage;
-  };
-  
-  /**
-   * Clear error
-   */
-  const clearError = () => {
-    error.value = null;
-  };
-  
+export const useAuthStore = defineStore('authFeature', () => {
+  const user = ref(null)
+  const loading = ref(false)
+  const initialized = ref(false)
+  const error = ref(null)
+
+  const isAuthenticated = computed(() => Boolean(user.value?.uid || user.value?.id))
+  const currentUser = computed(() => user.value)
+  const userRoles = computed(() => Array.isArray(user.value?.roles) ? user.value.roles : [])
+  const isAdmin = computed(() => userRoles.value.includes('admin') || userRoles.value.includes('sysadmin'))
+
+  function syncFromAccess(access = null) {
+    user.value = access ? { ...access } : null
+    initialized.value = true
+  }
+
+  function setLoading(value) {
+    loading.value = Boolean(value)
+  }
+
+  function setError(nextError = null) {
+    error.value = nextError
+  }
+
+  function clearUser() {
+    user.value = null
+  }
+
   return {
-    // State
     user,
     loading,
+    initialized,
     error,
-    
-    // Getters
     isAuthenticated,
     currentUser,
     userRoles,
     isAdmin,
-    
-    // Actions
-    initAuthListener,
-    loadUserData,
-    setUser,
-    clearUser,
+    syncFromAccess,
     setLoading,
     setError,
-    clearError
-  };
-});
+    clearUser,
+  }
+})
 
-export default useAuthStore;
+export default useAuthStore

@@ -1,18 +1,29 @@
 <template>
-  <section class="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-    <header class="mb-6">
-      <p v-if="eyebrow" class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-        {{ eyebrow }}
-      </p>
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900">
-        {{ title }}
-      </h1>
-      <p v-if="description" class="mt-2 text-sm leading-6 text-slate-600">
-        {{ description }}
-      </p>
-    </header>
+  <section class="card surface-glass relative w-full max-w-xl overflow-hidden rounded-[2rem] p-0">
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-32 bg-brand-gradient opacity-10"></div>
+    <div class="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[var(--color-primary)]/10 blur-3xl"></div>
+    <div class="pointer-events-none absolute -bottom-20 -left-16 h-40 w-40 rounded-full bg-[var(--color-secondary)]/10 blur-3xl"></div>
 
-    <slot />
+    <div class="relative p-6 sm:p-8">
+      <header class="mb-8">
+        <p v-if="eyebrow" class="section-label mb-4">
+          {{ eyebrow }}
+        </p>
+
+        <div class="space-y-3">
+          <h1 class="text-3xl font-bold tracking-[-0.04em] text-[var(--color-text)] md:text-4xl">
+            {{ title }}
+          </h1>
+          <p v-if="description" class="max-w-xl text-sm leading-7 text-muted md:text-base">
+            {{ description }}
+          </p>
+        </div>
+      </header>
+
+      <div class="relative">
+        <slot />
+      </div>
+    </div>
   </section>
 </template>
 

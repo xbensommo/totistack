@@ -7,26 +7,26 @@
     <template #actions>
       <RouterLink
         to="/clients/new"
-        class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+        class="btn-primary"
       >
         New Client
       </RouterLink>
     </template>
 
     <template #filters>
-      <div class="grid gap-3 md:grid-cols-3">
-        <label class="space-y-2 text-sm text-slate-600">
-          <span>Search</span>
+      <div class="grid gap-4 md:grid-cols-3">
+        <label class="space-y-2 text-sm text-soft">
+          <span class="field-label mb-0">Search</span>
           <input
             v-model="filters.search"
             type="text"
             placeholder="Name, email, or client number"
-            class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none ring-0 transition focus:border-slate-900"
+            class="input-field"
           />
         </label>
-        <label class="space-y-2 text-sm text-slate-600">
-          <span>Status</span>
-          <select v-model="filters.status" class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none transition focus:border-slate-900">
+        <label class="space-y-2 text-sm text-soft">
+          <span class="field-label mb-0">Status</span>
+          <select v-model="filters.status" class="select-field">
             <option value="">All statuses</option>
             <option value="lead">Lead</option>
             <option value="prospect">Prospect</option>
@@ -34,9 +34,9 @@
             <option value="inactive">Inactive</option>
           </select>
         </label>
-        <label class="space-y-2 text-sm text-slate-600">
-          <span>Lifecycle</span>
-          <select v-model="filters.lifecycleStage" class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none transition focus:border-slate-900">
+        <label class="space-y-2 text-sm text-soft">
+          <span class="field-label mb-0">Lifecycle</span>
+          <select v-model="filters.lifecycleStage" class="select-field">
             <option value="">All stages</option>
             <option value="lead">Lead</option>
             <option value="opportunity">Opportunity</option>
@@ -52,27 +52,27 @@
     <EntityTable :columns="columns" :rows="filteredRows" empty-text="No clients yet.">
       <template #cell:name="{ row }">
         <div class="space-y-1">
-          <RouterLink :to="`/clients/${row.id}`" class="font-medium text-slate-900 hover:underline">
+          <RouterLink :to="`/clients/${row.id}`" class="font-semibold text-[var(--color-text)] hover:text-primary transition-theme">
             {{ displayName(row) }}
           </RouterLink>
-          <p class="text-xs uppercase tracking-[0.14em] text-slate-400">
+          <p class="text-caption">
             {{ row.clientNumber || 'No number' }}
           </p>
         </div>
       </template>
 
       <template #cell:status="{ value }">
-        <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+        <span class="badge badge-primary">
           {{ value || 'unknown' }}
         </span>
       </template>
 
       <template #actions="{ row }">
         <div class="flex items-center justify-end gap-2">
-          <RouterLink :to="`/clients/${row.id}`" class="text-sm font-medium text-slate-700 hover:text-slate-900">
+          <RouterLink :to="`/clients/${row.id}`" class="btn-ghost btn-sm">
             View
           </RouterLink>
-          <RouterLink :to="`/clients/${row.id}/edit`" class="text-sm font-medium text-slate-700 hover:text-slate-900">
+          <RouterLink :to="`/clients/${row.id}/edit`" class="btn-secondary btn-sm">
             Edit
           </RouterLink>
         </div>
@@ -89,7 +89,7 @@
 
 import { computed, onMounted, reactive } from 'vue'
 import { RouterLink } from 'vue-router'
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import EntityPageShell from '../components/EntityPageShell.vue'
 import EntityStatsGrid from '../components/EntityStatsGrid.vue'
 import EntityTable from '../components/EntityTable.vue'

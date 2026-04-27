@@ -1,40 +1,39 @@
 <template>
-  <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <div class="table-wrap">
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-slate-200">
-        <thead class="bg-slate-50">
+      <table class="table-base min-w-full">
+        <thead>
           <tr>
             <th
               v-for="column in columns"
               :key="column.key"
-              class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"
             >
               {{ column.label }}
             </th>
-            <th v-if="$slots.actions" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <th v-if="$slots.actions" class="text-right">
               Actions
             </th>
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-slate-100 bg-white">
+        <tbody>
           <tr v-for="row in rows" :key="row.id || row._key || JSON.stringify(row)">
             <td
               v-for="column in columns"
               :key="column.key"
-              class="whitespace-nowrap px-4 py-4 text-sm text-slate-700"
+              class="whitespace-nowrap"
             >
               <slot :name="`cell:${column.key}`" :row="row" :value="row[column.key]">
                 {{ formatValue(row[column.key]) }}
               </slot>
             </td>
-            <td v-if="$slots.actions" class="px-4 py-4 text-right text-sm">
+            <td v-if="$slots.actions" class="text-right text-sm">
               <slot name="actions" :row="row" />
             </td>
           </tr>
 
           <tr v-if="rows.length === 0">
-            <td :colspan="columns.length + ($slots.actions ? 1 : 0)" class="px-4 py-8 text-center text-sm text-slate-500">
+            <td :colspan="columns.length + ($slots.actions ? 1 : 0)" class="px-4 py-10 text-center text-sm text-muted">
               {{ emptyText }}
             </td>
           </tr>

@@ -6,34 +6,34 @@
   >
     <EntitySectionCard title="Client Profile" description="Update basic client information.">
       <form class="grid gap-4 md:grid-cols-2" @submit.prevent="handleSubmit">
-        <label class="space-y-2 text-sm text-slate-600 md:col-span-2">
-          <span>Company Name</span>
-          <input v-model="form.companyName" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:border-slate-900" />
+        <label class="space-y-2 text-sm text-soft md:col-span-2">
+          <span class="field-label mb-0">Company Name</span>
+          <input v-model="form.companyName" type="text" class="input-field" />
         </label>
 
-        <label class="space-y-2 text-sm text-slate-600">
-          <span>First Name</span>
-          <input v-model="form.firstName" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:border-slate-900" />
+        <label class="space-y-2 text-sm text-soft">
+          <span class="field-label mb-0">First Name</span>
+          <input v-model="form.firstName" type="text" class="input-field" />
         </label>
 
-        <label class="space-y-2 text-sm text-slate-600">
-          <span>Last Name</span>
-          <input v-model="form.lastName" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:border-slate-900" />
+        <label class="space-y-2 text-sm text-soft">
+          <span class="field-label mb-0">Last Name</span>
+          <input v-model="form.lastName" type="text" class="input-field" />
         </label>
 
-        <label class="space-y-2 text-sm text-slate-600">
-          <span>Email</span>
-          <input v-model="form.email" type="email" class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:border-slate-900" />
+        <label class="space-y-2 text-sm text-soft">
+          <span class="field-label mb-0">Email</span>
+          <input v-model="form.email" type="email" class="input-field" />
         </label>
 
-        <label class="space-y-2 text-sm text-slate-600">
-          <span>Phone</span>
-          <input v-model="form.phone" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:border-slate-900" />
+        <label class="space-y-2 text-sm text-soft">
+          <span class="field-label mb-0">Phone</span>
+          <input v-model="form.phone" type="text" class="input-field" />
         </label>
 
-        <label class="space-y-2 text-sm text-slate-600">
-          <span>Status</span>
-          <select v-model="form.status" class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:border-slate-900">
+        <label class="space-y-2 text-sm text-soft">
+          <span class="field-label mb-0">Status</span>
+          <select v-model="form.status" class="select-field">
             <option value="lead">Lead</option>
             <option value="prospect">Prospect</option>
             <option value="active">Active</option>
@@ -42,9 +42,9 @@
           </select>
         </label>
 
-        <label class="space-y-2 text-sm text-slate-600">
-          <span>Lifecycle Stage</span>
-          <select v-model="form.lifecycleStage" class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:border-slate-900">
+        <label class="space-y-2 text-sm text-soft">
+          <span class="field-label mb-0">Lifecycle Stage</span>
+          <select v-model="form.lifecycleStage" class="select-field">
             <option value="lead">Lead</option>
             <option value="opportunity">Opportunity</option>
             <option value="customer">Customer</option>
@@ -53,15 +53,15 @@
           </select>
         </label>
 
-        <div class="md:col-span-2 flex items-center gap-3">
+        <div class="md:col-span-2 flex flex-wrap items-center gap-3 pt-2">
           <button
             type="submit"
-            class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+            class="btn-primary"
             :disabled="submitting"
           >
             {{ submitting ? 'Saving...' : 'Save Changes' }}
           </button>
-          <p v-if="errorMessage" class="text-sm text-rose-600">
+          <p v-if="errorMessage" class="field-error mt-0">
             {{ errorMessage }}
           </p>
         </div>
@@ -78,7 +78,7 @@
 
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import EntityPageShell from '../components/EntityPageShell.vue'
 import EntitySectionCard from '../components/EntitySectionCard.vue'
 import { createClientService } from '../services/clientService.js'

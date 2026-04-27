@@ -2,15 +2,12 @@
  * @file integrations/services/integrationService.js
  * @description Root-store compatible service factory for the integrations feature.
  */
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import {
   assertAccess,
   createId,
-  createLegacyService,
-  fetchCollectionItems,
-  getCollectionActions,
+  fetchDirectCollectionItems,
   normalizeError,
-  runAction,
 } from '../../shared/featureToolkit.js'
 
 const BUILT_IN_PROVIDERS = Object.freeze([
@@ -30,9 +27,12 @@ const BUILT_IN_PROVIDERS = Object.freeze([
 export function createIntegrationsService({ appStore, access, config = {} } = {}) {
   const store = appStore || useAppStore()
   const featureAccess = access || store?.access || null
-  const integrationActions = getCollectionActions(store, 'integrations')
-  const webhookActions = getCollectionActions(store, 'integrationWebhooks')
-  const logActions = getCollectionActions(store, 'integrationLogs')
+  const integrationActions = store?.integrationsActions
+  if (!integrationActions) throw new Error('Missing root-store shard actions: store.integrationsActions')
+  const webhookActions = store?.integrationWebhooksActions
+  if (!webhookActions) throw new Error('Missing root-store shard actions: store.integrationWebhooksActions')
+  const logActions = store?.integrationLogsActions
+  if (!logActions) throw new Error('Missing root-store shard actions: store.integrationLogsActions')
   const settings = { allowedProviders: BUILT_IN_PROVIDERS.map((item) => item.id), ...config }
 
   async function listProviders() {
@@ -40,12 +40,12 @@ export function createIntegrationsService({ appStore, access, config = {} } = {}
   }
 
   async function listIntegrations(options = {}) {
-    return fetchCollectionItems(store, 'integrations', options)
+    return fetchDirectCollectionItems(store, 'integrations', integrationActions, options)
   }
 
   async function getIntegrationById(integrationId) {
     try {
-      return await runAction(integrationActions, ['getById'], integrationId)
+      return await integrationActions.getById(integrationId)
     } catch (error) {
       throw normalizeError(error, 'Unable to load the selected integration.')
     }
@@ -72,9 +72,9 @@ export function createIntegrationsService({ appStore, access, config = {} } = {}
         updatedAt: new Date().toISOString(),
       }
       if (payload.id) {
-        await runAction(integrationActions, ['update'], integrationId, record)
+        await integrationActions.update(integrationId, record)
       } else {
-        await runAction(integrationActions, ['setById', 'create', 'add'], integrationId, { ...record, createdAt: record.updatedAt })
+        await integrationActions.setById(integrationId, { ...record, createdAt: record.updatedAt })
       }
       await recordLog({ integrationId, provider: provider.id, level: 'info', event: 'integration.saved', message: `Integration ${record.name} saved.` })
       return { id: integrationId, ...record }
@@ -95,7 +95,7 @@ export function createIntegrationsService({ appStore, access, config = {} } = {}
         ? 'Credentials look present. Replace this simulated check with a live provider probe.'
         : 'No credentials are stored yet.',
     }
-    await runAction(integrationActions, ['update'], integrationId, {
+    await integrationActions.update(integrationId, {
       health: simulated,
       status: simulated.status === 'healthy' ? 'connected' : 'error',
       lastSyncedAt: simulated.checkedAt,
@@ -124,9 +124,9 @@ export function createIntegrationsService({ appStore, access, config = {} } = {}
         throw new Error('Webhook URL is required.')
       }
       if (payload.id) {
-        await runAction(webhookActions, ['update'], webhookId, record)
+        await webhookActions.update(webhookId, record)
       } else {
-        await runAction(webhookActions, ['setById', 'create', 'add'], webhookId, { ...record, createdAt: record.updatedAt })
+        await webhookActions.setById(webhookId, { ...record, createdAt: record.updatedAt })
       }
       return { id: webhookId, ...record }
     } catch (error) {
@@ -135,7 +135,7 @@ export function createIntegrationsService({ appStore, access, config = {} } = {}
   }
 
   async function listLogs(options = {}) {
-    return fetchCollectionItems(store, 'integrationLogs', options)
+    return fetchDirectCollectionItems(store, 'integrationLogs', logActions, options)
   }
 
   async function recordLog(payload) {
@@ -149,7 +149,7 @@ export function createIntegrationsService({ appStore, access, config = {} } = {}
       context: payload.context || {},
       createdAt: new Date().toISOString(),
     }
-    await runAction(logActions, ['setById', 'create', 'add'], logId, record)
+    await logActions.setById(logId, record)
     return { id: logId, ...record }
   }
 
@@ -166,5 +166,4 @@ export function createIntegrationsService({ appStore, access, config = {} } = {}
   }
 }
 
-const legacyService = createLegacyService(() => createIntegrationsService({ appStore: useAppStore() }))
-export default legacyService
+export default createIntegrationsService

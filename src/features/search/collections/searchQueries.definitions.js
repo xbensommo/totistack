@@ -3,7 +3,7 @@ import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider'
 /** @file search/collections/searchQueries.definitions.js */
 export default defineCollection({
   name: 'searchQueries',
-  shard: { type: 'monthly' },
+  shard: { type: 'none' },
   schema: {
     query: { type: FIELD_TYPES.STRING, required: true, searchable: true },
     resultCount: { type: FIELD_TYPES.NUMBER, required: false, sortable: true },

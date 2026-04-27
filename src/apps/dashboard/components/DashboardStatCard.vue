@@ -1,19 +1,19 @@
 <template>
-  <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+  <article class="metric-card card-hover">
     <div class="flex items-start justify-between gap-4">
       <div class="space-y-2">
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+        <p class="text-caption">
           {{ label }}
         </p>
-        <h3 class="text-2xl font-semibold tracking-tight text-slate-900">
+        <h3 class="stat-value !mt-0 text-2xl md:text-3xl">
           {{ value }}
         </h3>
-        <p v-if="description" class="text-sm leading-6 text-slate-600">
+        <p v-if="description" class="text-sm leading-6 text-soft">
           {{ description }}
         </p>
       </div>
 
-      <span v-if="trend" class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+      <span v-if="trend" class="badge badge-primary shrink-0">
         {{ trend }}
       </span>
     </div>

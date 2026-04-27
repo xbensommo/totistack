@@ -10,7 +10,7 @@ import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider';
 
 export const conversationsCollection = defineCollection({
   name: 'conversations',
-  shard: { type: 'monthly', field: 'lastActivityAt' },
+  shard: { type: 'none' },
   schema: {
     id: { type: FIELD_TYPES.STRING, required: true },
     type: { type: FIELD_TYPES.STRING, required: true, enum: ['direct', 'group', 'channel'], filterable: true },
@@ -42,7 +42,7 @@ export const conversationsCollection = defineCollection({
 
 export const messagesCollection = defineCollection({
   name: 'messages',
-  shard: { type: 'monthly', field: 'createdAt' },
+  shard: { type: 'none' },
   schema: {
     id: { type: FIELD_TYPES.STRING, required: true },
     conversationId: { type: FIELD_TYPES.STRING, required: true, filterable: true },

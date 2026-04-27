@@ -1,37 +1,41 @@
 <template>
-  <aside class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <div class="space-y-2">
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+  <aside class="card sticky top-24 overflow-hidden">
+    <div class="absolute inset-x-6 top-0 h-px bg-brand-gradient opacity-70"></div>
+
+    <div class="space-y-3">
+      <p class="section-label">
         Client Summary
       </p>
-      <h2 class="text-xl font-semibold text-slate-900">
-        {{ headline }}
-      </h2>
-      <p class="text-sm text-slate-600">
-        {{ client.clientNumber || 'No client number' }}
-      </p>
+      <div class="space-y-1">
+        <h2 class="section-title">
+          {{ headline }}
+        </h2>
+        <p class="text-sm text-muted">
+          {{ client.clientNumber || 'No client number' }}
+        </p>
+      </div>
     </div>
 
     <dl class="mt-6 space-y-4 text-sm">
-      <div class="flex items-start justify-between gap-3">
-        <dt class="text-slate-500">Status</dt>
-        <dd class="font-medium text-slate-900">{{ client.status || '—' }}</dd>
+      <div class="status-strip">
+        <dt class="text-muted">Status</dt>
+        <dd><span class="badge badge-primary">{{ client.status || '—' }}</span></dd>
       </div>
-      <div class="flex items-start justify-between gap-3">
-        <dt class="text-slate-500">Lifecycle</dt>
-        <dd class="font-medium text-slate-900">{{ client.lifecycleStage || '—' }}</dd>
+      <div class="status-strip">
+        <dt class="text-muted">Lifecycle</dt>
+        <dd class="font-medium text-[var(--color-text)]">{{ client.lifecycleStage || '—' }}</dd>
       </div>
-      <div class="flex items-start justify-between gap-3">
-        <dt class="text-slate-500">Email</dt>
-        <dd class="font-medium text-slate-900">{{ client.email || '—' }}</dd>
+      <div class="status-strip">
+        <dt class="text-muted">Email</dt>
+        <dd class="font-medium text-[var(--color-text)] text-right break-all">{{ client.email || '—' }}</dd>
       </div>
-      <div class="flex items-start justify-between gap-3">
-        <dt class="text-slate-500">Phone</dt>
-        <dd class="font-medium text-slate-900">{{ client.phone || '—' }}</dd>
+      <div class="status-strip">
+        <dt class="text-muted">Phone</dt>
+        <dd class="font-medium text-[var(--color-text)]">{{ client.phone || '—' }}</dd>
       </div>
-      <div class="flex items-start justify-between gap-3">
-        <dt class="text-slate-500">Assigned To</dt>
-        <dd class="font-medium text-slate-900">{{ client.assignedTo || 'Unassigned' }}</dd>
+      <div class="status-strip">
+        <dt class="text-muted">Assigned To</dt>
+        <dd class="font-medium text-[var(--color-text)]">{{ client.assignedTo || 'Unassigned' }}</dd>
       </div>
     </dl>
   </aside>

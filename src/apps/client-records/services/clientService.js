@@ -4,9 +4,38 @@
  */
 
 const DEFAULT_LIST_OPTIONS = {
-  pageSize: 50,
-  sortBy: 'updatedAt',
-  sortDirection: 'desc',
+  limit: 50,
+  orderBy: [{ field: 'updatedAt', direction: 'desc' }],
+}
+
+function normalizeFilters(filters = []) {
+  if (Array.isArray(filters)) return filters
+  return Object.entries(filters || {})
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(([field, value]) => ({ field, op: '==', value }))
+}
+
+function toFetchOptions(options = {}) {
+  const normalized = {
+    ...options,
+    filters: normalizeFilters(options.filters),
+    limit: options.limit ?? options.pageSize ?? DEFAULT_LIST_OPTIONS.limit,
+  }
+
+  delete normalized.pageSize
+
+  if (!Array.isArray(normalized.orderBy)) {
+    if (options.sortBy) {
+      normalized.orderBy = [{ field: options.sortBy, direction: options.sortDirection || 'desc' }]
+    } else {
+      normalized.orderBy = DEFAULT_LIST_OPTIONS.orderBy
+    }
+  }
+
+  delete normalized.sortBy
+  delete normalized.sortDirection
+
+  return normalized
 }
 
 /**
@@ -16,7 +45,7 @@ const DEFAULT_LIST_OPTIONS = {
  * router, or root auth state.
  *
  * @param {object} context
- * @param {ReturnType<import('@/stores/appStore').useAppStore>|null} [context.store]
+ * @param {ReturnType<import('@app/stores/appStore').useAppStore>|null} [context.store]
  * @param {object|null} [context.access]
  * @param {() => Date} [context.now]
  * @returns {object}
@@ -73,25 +102,6 @@ export function createClientService({
     }
   }
 
-  /**
-   * Resolve generated collection actions from the root store.
-   *
-   * @param {string} name
-   * @returns {Record<string, Function>}
-   */
-  function getCollectionActions(name) {
-    const appStore = requireStore()
-    const actionKey = `${name}Actions`
-    const actions = appStore?.[actionKey]
-
-    if (!actions || typeof actions !== 'object') {
-      throw new Error(
-        `[client-records] Missing generated collection actions: "${actionKey}".`
-      )
-    }
-
-    return actions
-  }
 
   /**
    * Build a predictable client number.
@@ -194,8 +204,8 @@ export function createClientService({
    */
   async function fetchClients(options = {}) {
     ensureAccess('clients.read')
-    const clientsActions = getCollectionActions('clients')
-    await clientsActions.fetchInitialPage({ ...DEFAULT_LIST_OPTIONS, ...options })
+    const clientsActions = requireStore().clientsActions
+    await clientsActions.fetchInitialPage(toFetchOptions({ ...DEFAULT_LIST_OPTIONS, ...options }))
     return getCollectionState('clients')
   }
 
@@ -212,34 +222,31 @@ export function createClientService({
       throw new Error('A client id is required.')
     }
 
-    const clientsActions = getCollectionActions('clients')
-    const contactsActions = getCollectionActions('clientContacts')
-    const activitiesActions = getCollectionActions('clientActivities')
-    const notesActions = getCollectionActions('clientNotes')
+    const clientsActions = requireStore().clientsActions
+    const contactsActions = requireStore().clientContactsActions
+    const activitiesActions = requireStore().clientActivitiesActions
+    const notesActions = requireStore().clientNotesActions
 
     const client = await clientsActions.getById(clientId)
 
     if (!client) return null
 
     await Promise.all([
-      contactsActions.fetchInitialPage({
-        pageSize: 100,
-        sortBy: 'updatedAt',
-        sortDirection: 'desc',
-        filters: { clientId },
-      }),
-      activitiesActions.fetchInitialPage({
-        pageSize: 25,
-        sortBy: 'createdAt',
-        sortDirection: 'desc',
-        filters: { clientId },
-      }),
-      notesActions.fetchInitialPage({
-        pageSize: 25,
-        sortBy: 'createdAt',
-        sortDirection: 'desc',
-        filters: { clientId },
-      }),
+      contactsActions.fetchInitialPage(toFetchOptions({
+        limit: 100,
+        orderBy: [{ field: 'updatedAt', direction: 'desc' }],
+        filters: [{ field: 'clientId', op: '==', value: clientId }],
+      })),
+      activitiesActions.fetchInitialPage(toFetchOptions({
+        limit: 25,
+        orderBy: [{ field: 'createdAt', direction: 'desc' }],
+        filters: [{ field: 'clientId', op: '==', value: clientId }],
+      })),
+      notesActions.fetchInitialPage(toFetchOptions({
+        limit: 25,
+        orderBy: [{ field: 'createdAt', direction: 'desc' }],
+        filters: [{ field: 'clientId', op: '==', value: clientId }],
+      })),
     ])
 
     const contacts = getCollectionState('clientContacts').items.filter(
@@ -278,8 +285,8 @@ export function createClientService({
       throw new Error('Authentication required.')
     }
 
-    const clientsActions = getCollectionActions('clients')
-    const contactsActions = getCollectionActions('clientContacts')
+    const clientsActions = requireStore().clientsActions
+    const contactsActions = requireStore().clientContactsActions
 
     const clientId = generateId('client')
     const client = normalizeClientPayload(payload)
@@ -344,7 +351,7 @@ export function createClientService({
   async function updateClient(clientId, updates = {}) {
     ensureAccess('clients.update')
 
-    const clientsActions = getCollectionActions('clients')
+    const clientsActions = requireStore().clientsActions
     const current = await clientsActions.getById(clientId)
 
     if (!current) {
@@ -383,7 +390,7 @@ export function createClientService({
   async function archiveClient(clientId) {
     ensureAccess('clients.delete')
 
-    const clientsActions = getCollectionActions('clients')
+    const clientsActions = requireStore().clientsActions
     await clientsActions.update(clientId, {
       status: 'inactive',
       updatedAt: now(),
@@ -416,7 +423,7 @@ export function createClientService({
       throw new Error('A client id is required.')
     }
 
-    const contactsActions = getCollectionActions('clientContacts')
+    const contactsActions = requireStore().clientContactsActions
     const contactId = generateId('contact')
 
     const contact = {
@@ -444,7 +451,7 @@ export function createClientService({
     await contactsActions.setById(contactId, contact)
 
     if (contact.isPrimary) {
-      const clientsActions = getCollectionActions('clients')
+      const clientsActions = requireStore().clientsActions
       await clientsActions.update(clientId, {
         primaryContactId: contactId,
         firstName: contact.firstName,
@@ -480,8 +487,8 @@ export function createClientService({
       throw new Error('Authentication required.')
     }
 
-    const notesActions = getCollectionActions('clientNotes')
-    const clientsActions = getCollectionActions('clients')
+    const notesActions = requireStore().clientNotesActions
+    const clientsActions = requireStore().clientsActions
     const noteId = generateId('note')
 
     const note = {
@@ -521,7 +528,7 @@ export function createClientService({
       throw new Error('Authentication required.')
     }
 
-    const activityActions = getCollectionActions('clientActivities')
+    const activityActions = requireStore().clientActivitiesActions
     const activityId = generateId('activity')
 
     const activity = {

@@ -6,11 +6,8 @@ import { useAppStore } from '@app/stores/appStore'
 import {
   assertAccess,
   createId,
-  createLegacyService,
-  fetchCollectionItems,
-  getCollectionActions,
+  fetchDirectCollectionItems,
   normalizeError,
-  runAction,
   slugify,
 } from '../../shared/featureToolkit.js'
 import { DEFAULT_FORM_SETTINGS } from '../utils/formDefaults.js'
@@ -32,10 +29,14 @@ import { DEFAULT_FORM_SETTINGS } from '../utils/formDefaults.js'
 export function createFormsService({ appStore, access, services = {}, config = {} } = {}) {
   const store = appStore || useAppStore()
   const featureAccess = access || store?.access || null
-  const formsActions = getCollectionActions(store, 'forms')
-  const fieldActions = getCollectionActions(store, 'formFields')
-  const submissionActions = getCollectionActions(store, 'formSubmissions')
-  const webhookActions = getCollectionActions(store, 'formWebhooks')
+  const formsActions = store?.formsActions
+  if (!formsActions) throw new Error('Missing root-store shard actions: store.formsActions')
+  const fieldActions = store?.formFieldsActions
+  if (!fieldActions) throw new Error('Missing root-store shard actions: store.formFieldsActions')
+  const submissionActions = store?.formSubmissionsActions
+  if (!submissionActions) throw new Error('Missing root-store shard actions: store.formSubmissionsActions')
+  const webhookActions = store?.formWebhooksActions
+  if (!webhookActions) throw new Error('Missing root-store shard actions: store.formWebhooksActions')
 
   const settings = {
     maxFieldsPerForm: 50,
@@ -45,35 +46,35 @@ export function createFormsService({ appStore, access, services = {}, config = {
   }
 
   async function listForms(options = {}) {
-    return fetchCollectionItems(store, 'forms', options)
+    return fetchDirectCollectionItems(store, 'forms', formsActions, options)
   }
 
   async function getFormById(formId) {
     try {
-      return await runAction(formsActions, ['getById'], formId)
+      return await formsActions.getById(formId)
     } catch (error) {
       throw normalizeError(error, 'Unable to load the selected form.')
     }
   }
 
   async function getFormBySlug(slug) {
-    const forms = await listForms({ filters: { slug } })
+    const forms = await listForms({ filters: [{ field: 'slug', op: '==', value: slug }] })
     return forms.find((item) => item.slug === slug) || null
   }
 
   async function listFields(formId, options = {}) {
-    const items = await fetchCollectionItems(store, 'formFields', {
+    const items = await fetchDirectCollectionItems(store, 'formFields', fieldActions, {
       ...options,
-      filters: { ...(options.filters || {}), formId },
+      filters: [...(Array.isArray(options.filters) ? options.filters : []), { field: 'formId', op: '==', value: formId }],
       sort: { field: 'order', direction: 'asc' },
     })
     return items.filter((item) => item.formId === formId).sort((a, b) => (a.order || 0) - (b.order || 0))
   }
 
   async function listSubmissions(formId, options = {}) {
-    const items = await fetchCollectionItems(store, 'formSubmissions', {
+    const items = await fetchDirectCollectionItems(store, 'formSubmissions', submissionActions, {
       ...options,
-      filters: { ...(options.filters || {}), formId },
+      filters: [...(Array.isArray(options.filters) ? options.filters : []), { field: 'formId', op: '==', value: formId }],
     })
     return items.filter((item) => item.formId === formId)
   }
@@ -102,11 +103,11 @@ export function createFormsService({ appStore, access, services = {}, config = {
         throw new Error('Form name is required.')
       }
 
-      await runAction(formsActions, ['setById', 'create', 'add'], formId, formRecord)
+      await formsActions.setById(formId, formRecord)
 
       for (const [index, field] of fields.entries()) {
         const fieldId = createId('field')
-        await runAction(fieldActions, ['setById', 'create', 'add'], fieldId, {
+        await fieldActions.setById(fieldId, {
           formId,
           label: field.label?.trim() || `Field ${index + 1}`,
           key: field.key?.trim() || slugify(field.label || `field-${index + 1}`),
@@ -132,7 +133,7 @@ export function createFormsService({ appStore, access, services = {}, config = {
   async function updateForm(formId, updates) {
     try {
       assertAccess(featureAccess, 'forms.manage', 'You are not allowed to update forms.')
-      await runAction(formsActions, ['update'], formId, {
+      await formsActions.update(formId, {
         ...updates,
         updatedAt: new Date().toISOString(),
       })
@@ -161,9 +162,9 @@ export function createFormsService({ appStore, access, services = {}, config = {
         updatedAt: new Date().toISOString(),
       }
       if (field.id) {
-        await runAction(fieldActions, ['update'], fieldId, record)
+        await fieldActions.update(fieldId, record)
       } else {
-        await runAction(fieldActions, ['setById', 'create', 'add'], fieldId, { ...record, createdAt: record.updatedAt })
+        await fieldActions.setById(fieldId, { ...record, createdAt: record.updatedAt })
       }
       return { id: fieldId, ...record }
     } catch (error) {
@@ -199,8 +200,8 @@ export function createFormsService({ appStore, access, services = {}, config = {
         createdAt: new Date().toISOString(),
       }
 
-      await runAction(submissionActions, ['setById', 'create', 'add'], submissionId, submission)
-      await runAction(formsActions, ['update'], form.id, {
+      await submissionActions.setById(submissionId, submission)
+      await formsActions.update(form.id, {
         totalSubmissions: Number(form.totalSubmissions || 0) + 1,
         updatedAt: new Date().toISOString(),
       })
@@ -234,9 +235,9 @@ export function createFormsService({ appStore, access, services = {}, config = {
         throw new Error('Webhook URL is required.')
       }
       if (payload.id) {
-        await runAction(webhookActions, ['update'], webhookId, record)
+        await webhookActions.update(webhookId, record)
       } else {
-        await runAction(webhookActions, ['setById', 'create', 'add'], webhookId, { ...record, createdAt: record.updatedAt })
+        await webhookActions.setById(webhookId, { ...record, createdAt: record.updatedAt })
       }
       return { id: webhookId, ...record }
     } catch (error) {
@@ -259,5 +260,4 @@ export function createFormsService({ appStore, access, services = {}, config = {
   }
 }
 
-const legacyService = createLegacyService(() => createFormsService({ appStore: useAppStore() }))
-export default legacyService
+export default createFormsService

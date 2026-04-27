@@ -1,9 +1,8 @@
 <template>
-  <CrmPageShell
-    title="Opportunities"
-    description="Track deal value, expected close dates, and ownership across the sales funnel."
-  >
-    <CrmDataTable :columns="columns" :rows="rows" empty-text="No opportunities yet." />
+  <CrmPageShell title="Opportunities" description="Track deal value, expected close dates, and ownership across the sales funnel.">
+    <section class="card p-0 overflow-hidden">
+      <CrmDataTable :columns="columns" :rows="rows" empty-text="No opportunities yet." />
+    </section>
   </CrmPageShell>
 </template>
 

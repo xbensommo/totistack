@@ -1,12 +1,15 @@
 # Orders App
 
-Production-ready starter Orders app aligned with the latest Totistack declarative assembly model.
+Production-ready, business-ready Orders app aligned with the latest Totistack declarative assembly model.
 
 ## What this app exports
 
 - `app.manifest.js`
 - `routes.js`
 - `index.js`
+- `permissions.js`
+- `business/default-profile.js`
+- `business/profiles/*`
 - `collections/orders.collection.js`
 - `services/orderService.js`
 - starter Vue pages and reusable UI components
@@ -23,21 +26,51 @@ Production-ready starter Orders app aligned with the latest Totistack declarativ
 
 ## Root store compatibility
 
-The service resolves order actions from one of these shapes:
+The service resolves order actions directly from the generated root-store action:
 
-- `store.ordersActions`
-- `store.orderActions`
-- `store.collectionsActions.orders`
+```js
+store.ordersActions.fetchInitialPage(options)
+store.ordersActions.getById(id)
+store.ordersActions.add(payload)
+store.ordersActions.update(id, patch)
+store.ordersActions.remove(id)
+```
 
-## Included starter screens
 
-- Orders list
-- Order detail
-- Cart
-- Checkout
-- Invoice
+## Business profile support
+
+Included profiles:
+
+- `generic`
+- `totisoft`
+- `eduprolic`
+
+Use this app as:
+
+- e-commerce orders
+- internal back-office orders
+- quote-to-order conversion
+- service/project orders
+- assignment-style orders
+
+## Security and authorization
+
+The app now includes:
+
+- centralized order permissions
+- owner-aware access checks
+- service-level authorization checks
+- normalized validation / forbidden / runtime errors
 
 ## Notes
 
-This update intentionally trims the prototype to the real collection currently shipped in the source zip: `orders`.
-Additional collections such as refunds, carts, payments, or shipments can be added later as separate declarative collection files when they actually exist.
+This version replaces the older generic `userId` order ownership pattern with clearer business fields such as:
+
+- `customerId`
+- `placedById`
+- `assignedTo`
+- `businessProfile`
+- `businessData`
+- `workflowData`
+
+The UI starter screens remain lightweight on purpose. The service layer is the main upgrade and is ready to be wired into richer business flows later.

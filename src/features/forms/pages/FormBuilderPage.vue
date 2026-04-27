@@ -1,28 +1,47 @@
 <template>
-  <FeaturePageShell eyebrow="Forms" :title="pageTitle" description="Use this starter builder to define fields, labels, and core form settings.">
+  <FeaturePageShell
+    eyebrow="Forms"
+    :title="pageTitle"
+    description="Use this starter builder to define fields, labels, and core form settings."
+  >
     <template #actions>
-      <button type="button" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800" @click="save">Save form</button>
+      <button type="button" class="btn-primary" @click="save">
+        <i class="fas fa-floppy-disk text-xs"></i>
+        Save form
+      </button>
     </template>
 
     <div class="grid gap-6 xl:grid-cols-[320px,1fr]">
       <FormFieldsPalette :fields="fieldLibrary" @add="addField" />
+
       <div class="space-y-6">
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section class="card">
+          <div class="mb-5 flex flex-col gap-3 border-b border-theme pb-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p class="section-label">Configuration</p>
+              <h3 class="mt-3 section-title">Form details</h3>
+              <p class="mt-1 text-sm text-muted">Define the basic metadata before publishing or collecting responses.</p>
+            </div>
+          </div>
+
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="space-y-2 text-sm font-medium text-slate-700">
-              <span>Form name</span>
-              <input v-model="form.name" type="text" class="w-full rounded-xl border border-slate-200 px-3 py-2" />
+            <label>
+              <span class="field-label">Form name</span>
+              <input v-model="form.name" type="text" class="input-field" />
             </label>
-            <label class="space-y-2 text-sm font-medium text-slate-700">
-              <span>Slug</span>
-              <input v-model="form.slug" type="text" class="w-full rounded-xl border border-slate-200 px-3 py-2" />
+
+            <label>
+              <span class="field-label">Slug</span>
+              <input v-model="form.slug" type="text" class="input-field" />
             </label>
           </div>
-          <label class="mt-4 block space-y-2 text-sm font-medium text-slate-700">
-            <span>Description</span>
-            <textarea v-model="form.description" rows="3" class="w-full rounded-xl border border-slate-200 px-3 py-2"></textarea>
+
+          <label class="mt-4 block">
+            <span class="field-label">Description</span>
+            <textarea v-model="form.description" rows="3" class="textarea-field"></textarea>
           </label>
         </section>
+
         <FormBuilderCanvas :model-value="fields" @remove="removeField" />
       </div>
     </div>

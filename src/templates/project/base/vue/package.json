@@ -16,7 +16,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.1",
     "@tailwindcss/vite": "^4.1.8",
-    "@xbensommo/shard-provider": "^2.2.3",
+    "@xbensommo/shard-provider": "^2.2.17",
     "aos": "^2.3.4",
     "firebase": "^12.6.0",
     "gsap": "^3.14.1",
@@ -30,8 +30,6 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "eslint": "^8.56.0",
-    "eslint-plugin-vue": "^9.20.0",
     "prettier": "^3.1.0",
     "@unhead/vue": "^2.1.12",
     "@vitejs/plugin-vue": "^6.0.1",

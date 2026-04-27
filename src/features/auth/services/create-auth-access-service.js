@@ -18,7 +18,8 @@ import {
   updatePassword,
   updateProfile as updateFirebaseProfile,
 } from 'firebase/auth';
-import { createShardedActions } from '@xbensommo/shard-provider';
+
+import { buildAuthRoleProfile } from './create-auth-role-profile.js';
 
 const AUTH_ERROR_MESSAGES = {
   'auth/user-not-found': 'No account was found for that email address.',
@@ -60,6 +61,44 @@ function buildClaims(roles = []) {
   }, {});
 }
 
+function isNotFoundError(error) {
+  const code = String(error?.code || '').toUpperCase();
+  const message = String(error?.message || '').toLowerCase();
+
+  return code === 'NOT_FOUND' || code === 'AUTH/USER-NOT-FOUND' || message.includes('not found');
+}
+
+/**
+ * Build the merged profile shape used by auth state sync.
+ * This is read-only and must not write to persistence.
+ *
+ * @param {object} firebaseUser
+ * @param {object|null} existing
+ * @param {object} [profileData={}]
+ * @param {object} [config={}]
+ * @returns {object}
+ */
+function buildProfileSnapshot(firebaseUser, existing, profileData = {}, config = {}) {
+  const roleProfile = buildAuthRoleProfile({ existing, profileData, config });
+
+  return {
+    uid: firebaseUser.uid,
+    email: firebaseUser.email,
+    displayName: profileData.displayName || firebaseUser.displayName || existing?.displayName || '',
+    firstName: profileData.firstName || existing?.firstName || '',
+    lastName: profileData.lastName || existing?.lastName || '',
+    photoURL: firebaseUser.photoURL || existing?.photoURL || '',
+    phoneNumber: profileData.phoneNumber || existing?.phoneNumber || '',
+    role: roleProfile.role,
+    roles: roleProfile.roles,
+    permissions: roleProfile.permissions,
+    status: existing?.status || profileData.status || 'active',
+    emailVerified: firebaseUser.emailVerified,
+    createdAt: existing?.createdAt || profileData.createdAt || null,
+    lastLoginAt: existing?.lastLoginAt || profileData.lastLoginAt || null,
+  };
+}
+
 export function createAuthAccessService({
   auth,
   state,
@@ -70,34 +109,69 @@ export function createAuthAccessService({
   storeApi,
 }) {
   const userCollectionName = config?.profileCollection || 'users';
-  const usersActions = collectionActions(userCollectionName) || createShardedActions(userCollectionName, state, shardProvider);
+  const actionKey = `${userCollectionName}Actions`;
+  const resolvedCollectionActions = storeApi?.[actionKey] || collectionActions?.[actionKey] || null;
+
+  if (!resolvedCollectionActions) {
+    throw new Error(
+      `[auth] Missing generated collection actions for "${userCollectionName}". The auth runtime must use the root store collection registry.`
+    );
+  }
+
+  const usersActions = resolvedCollectionActions;
   let initialized = false;
   let initializePromise = null;
 
-  async function ensureUserProfile(firebaseUser, profileData = {}) {
-    const existing = await usersActions.getById(firebaseUser.uid).catch(() => null);
-
-    const nextProfile = {
-      email: firebaseUser.email,
-      displayName: profileData.displayName || firebaseUser.displayName || existing?.displayName || '',
-      firstName: profileData.firstName || existing?.firstName || '',
-      lastName: profileData.lastName || existing?.lastName || '',
-      photoURL: firebaseUser.photoURL || existing?.photoURL || '',
-      phoneNumber: profileData.phoneNumber || existing?.phoneNumber || '',
-      role: existing?.role || config?.rbac?.defaultRole || 'user',
-      roles: Array.isArray(existing?.roles) && existing.roles.length > 0 ? existing.roles : [existing?.role || config?.rbac?.defaultRole || 'user'],
-      permissions: Array.isArray(existing?.permissions) ? existing.permissions : [],
-      status: existing?.status || 'active',
-      emailVerified: firebaseUser.emailVerified,
-      lastLoginAt: new Date(),
-      updatedAt: new Date(),
-      createdAt: existing?.createdAt || new Date(),
-    };
-
-    if (existing) {
-      await usersActions.update(firebaseUser.uid, nextProfile);
-      return { ...existing, ...nextProfile };
+  async function getExistingProfile(firebaseUser) {
+    try {
+      return await usersActions.getById(firebaseUser.uid);
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        return null;
+      }
+      throw error;
     }
+  }
+
+  /**
+   * Read and merge a user profile for state sync.
+   * This function must stay read-only.
+   *
+   * @param {object} firebaseUser
+   * @param {object} [profileData={}]
+   * @returns {Promise<object>}
+   */
+  async function ensureUserProfile(firebaseUser, profileData = {}) {
+    const existing = await getExistingProfile(firebaseUser);
+    return buildProfileSnapshot(firebaseUser, existing, profileData, config);
+  }
+
+  /**
+   * Create the profile once when it does not exist.
+   * This is reserved for explicit creation paths like sign up and first social login.
+   *
+   * @param {object} firebaseUser
+   * @param {object} [profileData={}]
+   * @returns {Promise<object>}
+   */
+  async function createUserProfileIfMissing(firebaseUser, profileData = {}) {
+    let existing;
+
+    try{
+      existing = await getExistingProfile(firebaseUser);
+    }catch(error){
+      
+    }
+    if (existing) {
+      return buildProfileSnapshot(firebaseUser, existing, profileData, config);
+    }
+
+    const timestamp = new Date();
+    const nextProfile = buildProfileSnapshot(firebaseUser, null, {
+      ...profileData,
+      createdAt: timestamp,
+      lastLoginAt: timestamp,
+    }, config);
 
     await usersActions.setById(firebaseUser.uid, nextProfile);
     return nextProfile;
@@ -196,7 +270,7 @@ export function createAuthAccessService({
         });
       }
 
-      await ensureUserProfile(credential.user, profileData);
+      await createUserProfileIfMissing(credential.user, profileData);
       await sendEmailVerification(credential.user).catch(() => undefined);
       return syncAuthenticatedUser(credential.user);
     } catch (error) {
@@ -244,9 +318,9 @@ export function createAuthAccessService({
 
       await usersActions.update(auth.currentUser.uid, {
         ...profileData,
-        updatedAt: new Date(),
       });
 
+      state._profileCache.value = { uid: null, timestamp: 0, data: null };
       return syncAuthenticatedUser(auth.currentUser);
     } catch (error) {
       throw normalizeError(error);
@@ -272,8 +346,9 @@ export function createAuthAccessService({
       await setPersistence(auth, browserLocalPersistence);
       const provider = createProvider(providerName);
       const result = await signInWithPopup(auth, provider);
-      await ensureUserProfile(result.user, {
+      await createUserProfileIfMissing(result.user, {
         displayName: result.user.displayName || '',
+        photoURL: result.user.photoURL || '',
       });
       return syncAuthenticatedUser(result.user);
     } catch (error) {
@@ -314,6 +389,8 @@ export function createAuthAccessService({
     resendVerificationEmail,
     refreshUserClaims,
     syncAuthenticatedUser,
+    ensureUserProfile,
+    createUserProfileIfMissing,
     get initialized() {
       return initialized;
     },

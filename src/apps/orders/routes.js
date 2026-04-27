@@ -3,6 +3,8 @@
  * @description Declarative route records for the Orders app.
  */
 
+import { ORDER_PERMISSIONS } from './permissions.js'
+
 const routes = [
   {
     path: '/orders',
@@ -11,7 +13,8 @@ const routes = [
     meta: {
       requiresAuth: true,
       feature: 'orders',
-      roles: ['admin', 'manager', 'user'],
+      permission: ORDER_PERMISSIONS.VIEW,
+      roles: ['admin', 'manager', 'receptionist', 'consultant', 'user'],
       title: 'Orders',
     },
   },
@@ -22,7 +25,8 @@ const routes = [
     meta: {
       requiresAuth: true,
       feature: 'orders',
-      roles: ['admin', 'manager', 'user'],
+      permission: ORDER_PERMISSIONS.VIEW,
+      roles: ['admin', 'manager', 'receptionist', 'consultant', 'user'],
       title: 'Order Details',
     },
   },
@@ -33,7 +37,8 @@ const routes = [
     meta: {
       requiresAuth: true,
       feature: 'orders',
-      roles: ['admin', 'manager', 'user'],
+      permission: ORDER_PERMISSIONS.CREATE,
+      roles: ['admin', 'manager', 'receptionist', 'user'],
       title: 'Cart',
     },
   },
@@ -44,7 +49,8 @@ const routes = [
     meta: {
       requiresAuth: true,
       feature: 'orders',
-      roles: ['admin', 'manager', 'user'],
+      permission: ORDER_PERMISSIONS.CREATE,
+      roles: ['admin', 'manager', 'receptionist', 'user'],
       title: 'Checkout',
     },
   },
@@ -55,7 +61,8 @@ const routes = [
     meta: {
       requiresAuth: true,
       feature: 'orders',
-      roles: ['admin', 'manager', 'user'],
+      permission: ORDER_PERMISSIONS.VIEW_INVOICE,
+      roles: ['admin', 'manager', 'receptionist', 'consultant', 'user'],
       title: 'Invoice',
     },
   },

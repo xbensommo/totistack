@@ -5,6 +5,7 @@
 import manifest from './feature.manifest.js'
 import routes from './routes.js'
 import { createMediaService } from './services/mediaService.js'
+import { createMediaActionDefinitions } from './media.actions.js'
 
 export { manifest, routes, createMediaService }
 
@@ -18,4 +19,6 @@ export default {
   manifest,
   routes,
   createServices,
+  createActionDefinitions: createMediaActionDefinitions,
 }
+export { createMediaActionDefinitions }

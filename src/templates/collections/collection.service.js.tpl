@@ -1,250 +1,122 @@
 /**
  * @file service.js
- * @description Service layer for {{collectionName}} collection
- * @date 2026-03-22
+ * @description Root-store service layer for {{collectionName}} collection.
+ * @date 2026-04-20
  * @author Totistack Team
  */
 
-import { useShardProvider } from '@xbensommo/shard-provider';
-import { useAuthStore } from '../../../../app/stores/auth.store.js';
-import collectionDefinition from './definition.js';
+import { useAppStore } from '@app/stores/appStore';
+import {
+  getCollectionActions,
+  getCollectionItems,
+  normalizeError,
+} from '@features/shared/featureToolkit.js';
 
 /**
- * Service class for {{collectionName}} operations
+ * Resolve root-store collection actions for {{collectionName}}.
+ *
+ * @param {ReturnType<typeof useAppStore>} store
+ * @returns {Record<string, Function>}
  */
-class {{componentName}}Service {
-  constructor() {
-    this.provider = null;
-    this.collection = null;
-    this.definition = collectionDefinition;
-    this.init();
+function requireActions(store) {
+  const actions = getCollectionActions(store, '{{collectionName}}');
+
+  if (!actions || typeof actions !== 'object' || Object.keys(actions).length === 0) {
+    throw new Error(
+      '[{{collectionName}}] Missing generated collection actions on the root store. '
+      + 'Collections must use the centralized root-store shard actions.'
+    );
   }
-  
-  /**
-   * Initialize the service with shard provider
-   */
-  async init() {
-    if (this.definition.provider === 'firestore') {
-      const shardProvider = useShardProvider();
-      this.provider = shardProvider;
-      this.collection = shardProvider.collection(this.definition.collectionPath);
-    }
-  }
-  
-  /**
-   * Get all items with optional filters
-   * @param {Object} filters - Query filters
-   * @param {Object} options - Query options (limit, orderBy)
-   * @returns {Promise<Array>} List of items
-   */
-  async getAll(filters = {}, options = {}) {
-    try {
-      let query = this.collection;
-      
-      // Apply filters
-      Object.entries(filters).forEach(([field, value]) => {
-        query = query.where(field, '==', value);
-      });
-      
-      // Apply ordering
-      if (options.orderBy) {
-        query = query.orderBy(options.orderBy.field, options.orderBy.direction || 'asc');
+
+  return actions;
+}
+
+/**
+ * Build the default {{collectionName}} service.
+ *
+ * @param {ReturnType<typeof useAppStore>} [store]
+ * @returns {{
+ *   list: (params?: Record<string, any>) => Promise<any[]>,
+ *   getById: (id: string, options?: Record<string, any>) => Promise<any>,
+ *   create: (payload: Record<string, any>) => Promise<any>,
+ *   update: (id: string, payload: Record<string, any>) => Promise<any>,
+ *   remove: (id: string, options?: Record<string, any>) => Promise<any>,
+ *   restore: (id: string, options?: Record<string, any>) => Promise<any>,
+ * }}
+ */
+export function create{{componentName}}Service(store = useAppStore()) {
+  const actions = requireActions(store);
+
+  return {
+    async list(params = {}) {
+      try {
+        await actions.fetchInitialPage(params);
+        return getCollectionItems(store, '{{collectionName}}');
+      } catch (error) {
+        throw normalizeError(error, 'Failed to load {{collectionName}}.')
       }
-      
-      // Apply limit
-      if (options.limit) {
-        query = query.limit(options.limit);
+    },
+
+    async getById(id, options = {}) {
+      try {
+        if (!id) throw new Error('An item id is required.')
+        return actions.getById(id, options.shardSource)
+      } catch (error) {
+        throw normalizeError(error, 'Failed to load {{collectionName}} item.')
       }
-      
-      const snapshot = await query.get();
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-    } catch (error) {
-      console.error('Error fetching {{collectionName}}:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Get a single item by ID
-   * @param {string} id - Document ID
-   * @returns {Promise<Object|null>} Item or null if not found
-   */
-  async getById(id) {
-    try {
-      const doc = await this.collection.doc(id).get();
-      if (!doc.exists) return null;
-      return {
-        id: doc.id,
-        ...doc.data()
-      };
-    } catch (error) {
-      console.error(`Error fetching {{collectionName}} ${id}:`, error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Create a new item
-   * @param {Object} data - Item data
-   * @returns {Promise<Object>} Created item with ID
-   */
-  async create(data) {
-    try {
-      const authStore = useAuthStore();
-      
-      // Add metadata
-      const enrichedData = {
-        ...data,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdBy: authStore.user?.uid,
-        updatedBy: authStore.user?.uid
-      };
-      
-      // Execute beforeCreate hook
-      const processedData = await this.definition.hooks?.beforeCreate(enrichedData) || enrichedData;
-      
-      // Create document
-      const docRef = await this.collection.add(processedData);
-      const doc = await docRef.get();
-      const result = {
-        id: docRef.id,
-        ...doc.data()
-      };
-      
-      // Execute afterCreate hook
-      await this.definition.hooks?.afterCreate(result);
-      
-      return result;
-    } catch (error) {
-      console.error('Error creating {{collectionName}}:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Update an existing item
-   * @param {string} id - Document ID
-   * @param {Object} data - Updated data
-   * @returns {Promise<Object>} Updated item
-   */
-  async update(id, data) {
-    try {
-      const authStore = useAuthStore();
-      
-      // Add metadata
-      const enrichedData = {
-        ...data,
-        updatedAt: new Date().toISOString(),
-        updatedBy: authStore.user?.uid
-      };
-      
-      // Execute beforeUpdate hook
-      const processedData = await this.definition.hooks?.beforeUpdate(id, enrichedData) || enrichedData;
-      
-      // Update document
-      await this.collection.doc(id).update(processedData);
-      
-      // Fetch updated document
-      const doc = await this.collection.doc(id).get();
-      const result = {
-        id,
-        ...doc.data()
-      };
-      
-      // Execute afterUpdate hook
-      await this.definition.hooks?.afterUpdate(id, result);
-      
-      return result;
-    } catch (error) {
-      console.error(`Error updating {{collectionName}} ${id}:`, error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Delete an item
-   * @param {string} id - Document ID
-   * @param {boolean} hardDelete - Whether to permanently delete
-   * @returns {Promise<boolean>} Success status
-   */
-  async delete(id, hardDelete = false) {
-    try {
-      // Execute beforeDelete hook
-      const shouldDelete = await this.definition.hooks?.beforeDelete(id);
-      if (shouldDelete === false) return false;
-      
-      if (hardDelete || !this.definition.settings.softDelete) {
-        // Hard delete
-        await this.collection.doc(id).delete();
-      } else {
-        // Soft delete
-        const authStore = useAuthStore();
-        await this.collection.doc(id).update({
-          deletedAt: new Date().toISOString(),
-          deletedBy: authStore.user?.uid
-        });
+    },
+
+    async create(payload = {}) {
+      try {
+        return actions.add(payload)
+      } catch (error) {
+        throw normalizeError(error, 'Failed to create {{collectionName}} item.')
       }
-      
-      // Execute afterDelete hook
-      await this.definition.hooks?.afterDelete(id);
-      
-      return true;
-    } catch (error) {
-      console.error(`Error deleting {{collectionName}} ${id}:`, error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Restore a soft-deleted item
-   * @param {string} id - Document ID
-   * @returns {Promise<Object>} Restored item
-   */
-  async restore(id) {
-    try {
-      await this.collection.doc(id).update({
-        deletedAt: null,
-        deletedBy: null
-      });
-      
-      const doc = await this.collection.doc(id).get();
-      return {
-        id,
-        ...doc.data()
-      };
-    } catch (error) {
-      console.error(`Error restoring {{collectionName}} ${id}:`, error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Subscribe to real-time updates
-   * @param {Function} callback - Callback function
-   * @param {Object} filters - Query filters
-   * @returns {Function} Unsubscribe function
-   */
-  subscribe(callback, filters = {}) {
-    let query = this.collection;
-    
-    Object.entries(filters).forEach(([field, value]) => {
-      query = query.where(field, '==', value);
-    });
-    
-    return query.onSnapshot((snapshot) => {
-      const items = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      callback(items);
-    });
+    },
+
+    async update(id, payload = {}) {
+      try {
+        if (!id) throw new Error('An item id is required.')
+        return actions.update(id, payload)
+      } catch (error) {
+        throw normalizeError(error, 'Failed to update {{collectionName}} item.')
+      }
+    },
+
+    async remove(id, options = {}) {
+      try {
+        if (!id) throw new Error('An item id is required.')
+
+        if (options.permanent && typeof actions.removePermanently === 'function') {
+          return actions.removePermanently(id, options.shardSource)
+        }
+
+        if (typeof actions.remove === 'function') {
+          return actions.remove(id, options.shardSource)
+        }
+
+        throw new Error('No remove action is available for {{collectionName}}.')
+      } catch (error) {
+        throw normalizeError(error, 'Failed to remove {{collectionName}} item.')
+      }
+    },
+
+    async restore(id, options = {}) {
+      try {
+        if (!id) throw new Error('An item id is required.')
+
+        if (typeof actions.restore === 'function') {
+          return actions.restore(id, options.shardSource)
+        }
+
+        throw new Error('Restore is not available for {{collectionName}}.')
+      } catch (error) {
+        throw normalizeError(error, 'Failed to restore {{collectionName}} item.')
+      }
+    },
   }
 }
 
-// Export singleton instance
-export const {{componentName}}Service = new {{componentName}}Service();
-export default {{componentName}}Service;
+const {{componentName}}Service = create{{componentName}}Service
+
+export default {{componentName}}Service

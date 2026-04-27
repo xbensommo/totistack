@@ -31,7 +31,7 @@
             <div class="rounded-2xl border border-white/10 bg-white/5 p-2 shadow-lg">
               <img
                 class="h-auto w-16 rounded-xl md:w-20"
-                src="#"
+                src=""
                 alt="Totisoft Logo"
               />
             </div>
@@ -203,7 +203,7 @@
       >
         <div class="flex items-center gap-4">
           <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
-            <img class="text-xs font-bold text-white"  src="@/assets/logo.svg" />
+            <img class="text-xs font-bold text-white"  src="" />
           </div>
           <p>© {{ currentYear }} Totisoft CC. All rights reserved.</p>
         </div>

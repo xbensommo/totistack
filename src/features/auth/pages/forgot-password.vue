@@ -1,15 +1,24 @@
 <template>
-  <AuthCard title="Reset password" description="Enter your email and we will send you a reset link.">
-    <form class="space-y-4" @submit.prevent="handleSubmit">
-      <AuthField v-model="email" label="Email address" type="email" autocomplete="email" :error="error" />
-      <button
-        type="submit"
-        class="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-        :disabled="loading"
-      >
+  <AuthCard
+    eyebrow="Password recovery"
+    title="Reset your password"
+    description="Enter your email and we will send you a secure reset link."
+  >
+    <form class="space-y-5" @submit.prevent="handleSubmit">
+      <AuthField
+        v-model="email"
+        label="Email address"
+        type="email"
+        autocomplete="email"
+        placeholder="you@company.com"
+        :error="error"
+      />
+
+      <button type="submit" class="btn-primary w-full" :disabled="loading">
         {{ loading ? 'Sending link...' : 'Send reset link' }}
       </button>
-      <RouterLink class="inline-flex text-sm font-medium text-slate-700 hover:text-slate-900" to="/auth">
+
+      <RouterLink class="inline-flex text-sm font-semibold text-soft transition hover:text-primary" to="/auth">
         Back to sign in
       </RouterLink>
     </form>

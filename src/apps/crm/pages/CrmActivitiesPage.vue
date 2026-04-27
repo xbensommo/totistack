@@ -1,9 +1,8 @@
 <template>
-  <CrmPageShell
-    title="Activities"
-    description="Keep a searchable timeline of notes, calls, meetings, and follow-up actions."
-  >
-    <CrmDataTable :columns="columns" :rows="rows" empty-text="No CRM activity recorded yet." />
+  <CrmPageShell title="Activities" description="Keep a searchable timeline of notes, calls, meetings, and follow-up actions.">
+    <section class="card p-0 overflow-hidden">
+      <CrmDataTable :columns="columns" :rows="rows" empty-text="No CRM activity recorded yet." />
+    </section>
   </CrmPageShell>
 </template>
 

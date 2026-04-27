@@ -1,18 +1,18 @@
 <template>
-  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+  <div class="kpi-grid">
     <article
       v-for="item in items"
       :key="item.label"
-      class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      class="metric-card"
     >
       <div class="space-y-2">
-        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <p class="stat-title uppercase tracking-[0.18em]">
           {{ item.label }}
         </p>
-        <p class="text-2xl font-semibold text-slate-900">
+        <p class="stat-value text-2xl md:text-3xl">
           {{ item.value }}
         </p>
-        <p v-if="item.helpText" class="text-sm text-slate-500">
+        <p v-if="item.helpText" class="text-sm text-muted">
           {{ item.helpText }}
         </p>
       </div>

@@ -1,5 +1,5 @@
 <template>
-  <span :class="badgeClass" class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold">
+  <span :class="badgeClass" class="badge capitalize">
     {{ label }}
   </span>
 </template>
@@ -15,14 +15,15 @@ const props = defineProps({
 })
 
 const map = {
-  pending: 'bg-amber-100 text-amber-800',
-  confirmed: 'bg-emerald-100 text-emerald-800',
-  checked_in: 'bg-sky-100 text-sky-800',
-  completed: 'bg-slate-200 text-slate-800',
-  cancelled: 'bg-rose-100 text-rose-800',
-  no_show: 'bg-red-100 text-red-800',
+  pending: 'badge-warning',
+  confirmed: 'badge-success',
+  checked_in: 'badge-primary',
+  completed: '',
+  cancelled: 'badge-danger',
+  no_show: 'badge-danger',
+  rescheduled: 'badge-primary',
 }
 
 const label = computed(() => props.status.replace(/_/g, ' '))
-const badgeClass = computed(() => map[props.status] || 'bg-slate-100 text-slate-700')
+const badgeClass = computed(() => map[props.status] || '')
 </script>

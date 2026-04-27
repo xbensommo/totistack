@@ -3,7 +3,7 @@
  * @description CRM service registry entry for Totistack generated assembly.
  */
 
-import { createCrmService } from './services/crm.service.js'
+import { createCrmService } from './services/crmService.js'
 
 /**
  * Create CRM services from shared root infrastructure.

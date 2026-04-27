@@ -1,31 +1,27 @@
 /**
  * @file orders/app.manifest.js
  * @description Declarative Orders app manifest aligned with the latest Totistack assembly flow.
- *
- * This app remains intentionally declarative:
- * - no runtime route registration
- * - no provider creation
- * - no root auth/rbac ownership
- *
- * Totistack should discover this manifest and assemble the app through
- * generated registries under src/generated/*.
  */
+
+import { ORDER_PERMISSIONS } from './permissions.js'
 
 export default {
   id: 'orders',
   type: 'app',
   name: 'Orders System',
-  version: '3.0.0',
-  description: 'Order operations for carts, checkout, invoicing, fulfillment, and customer history.',
+  version: '4.0.0',
+  description: 'Business-ready order operations for carts, checkout, invoicing, fulfillment, and customer history.',
   dependencies: {
     features: ['auth', 'rbac'],
     apps: ['client-records'],
   },
+  businessProfiles: ['generic', 'totisoft', 'eduprolic'],
   navigation: {
     icon: 'ShoppingCart',
     label: 'Orders',
     priority: 30,
-    roles: ['admin', 'manager', 'user'],
+    permission: ORDER_PERMISSIONS.VIEW,
+    roles: ['admin', 'manager', 'receptionist', 'consultant', 'user'],
   },
   collections: ['orders'],
 }

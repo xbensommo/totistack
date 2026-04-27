@@ -1,5 +1,5 @@
 <template>
-  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+  <div class="kpi-grid">
     <DashboardStatCard
       v-for="item in cards"
       :key="item.id || item.label"

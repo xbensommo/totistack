@@ -5,6 +5,7 @@
 import manifest from './feature.manifest.js'
 import routes from './routes.js'
 import { createIntegrationsService } from './services/integrationService.js'
+import { createIntegrationsActionDefinitions } from './integrations.actions.js'
 
 export { manifest, routes, createIntegrationsService }
 
@@ -18,4 +19,6 @@ export default {
   manifest,
   routes,
   createServices,
+  createActionDefinitions: createIntegrationsActionDefinitions,
 }
+export { createIntegrationsActionDefinitions }

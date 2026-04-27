@@ -3,7 +3,7 @@ import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider'
 /** @file workflows/collections/workflowLogs.definitions.js */
 export default defineCollection({
   name: 'workflowLogs',
-  shard: { type: 'monthly' },
+  shard: { type: 'none' },
   schema: {
     workflowId: { type: FIELD_TYPES.STRING, required: true, filterable: true },
     workflowRunId: { type: FIELD_TYPES.STRING, required: false, filterable: true },

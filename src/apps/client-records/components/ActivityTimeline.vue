@@ -5,29 +5,32 @@
       :key="entry.id || `${entry.type}-${entry.createdAt}`"
       class="flex gap-4"
     >
-      <div class="mt-2 h-2.5 w-2.5 rounded-full bg-slate-900"></div>
-      <div class="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div class="relative flex flex-col items-center">
+        <div class="mt-2 h-3 w-3 rounded-full bg-brand-gradient shadow-theme-glow"></div>
+        <div class="mt-2 h-full min-h-8 w-px bg-[var(--color-border)]"></div>
+      </div>
+      <div class="card card-hover min-w-0 flex-1 p-4 md:p-5">
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p class="text-sm font-semibold text-slate-900">
+          <div class="space-y-1">
+            <p class="text-sm font-semibold text-[var(--color-text)]">
               {{ entry.action || entry.type || 'Activity' }}
             </p>
-            <p class="mt-1 text-sm text-slate-600">
+            <p class="text-sm text-muted">
               {{ entry.description || 'No description provided.' }}
             </p>
           </div>
-          <span class="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500">
+          <span class="badge badge-primary">
             {{ entry.priority || 'medium' }}
           </span>
         </div>
-        <div class="mt-3 flex flex-wrap gap-3 text-xs uppercase tracking-[0.14em] text-slate-400">
+        <div class="mt-4 flex flex-wrap gap-3 text-caption">
           <span>{{ entry.type || 'note' }}</span>
           <span>{{ formatDate(entry.createdAt) }}</span>
         </div>
       </div>
     </li>
 
-    <li v-if="items.length === 0" class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+    <li v-if="items.length === 0" class="empty-state px-5 py-8 text-sm">
       No timeline entries yet.
     </li>
   </ol>

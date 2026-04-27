@@ -7,7 +7,7 @@
     <template #actions>
       <RouterLink
         :to="`/clients/${route.params.id}/edit`"
-        class="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
+        class="btn-secondary"
       >
         Edit Client
       </RouterLink>
@@ -19,13 +19,13 @@
       <div class="space-y-6">
         <EntitySectionCard title="Primary Contact" description="Main contact details used by the business and support teams.">
           <div v-if="client.primaryContact" class="grid gap-4 md:grid-cols-2">
-            <div>
-              <p class="text-sm font-medium text-slate-900">
+            <div class="card-soft">
+              <p class="text-base font-semibold text-[var(--color-text)]">
                 {{ client.primaryContact.firstName }} {{ client.primaryContact.lastName }}
               </p>
-              <p class="text-sm text-slate-600">{{ client.primaryContact.title || 'No title set' }}</p>
+              <p class="mt-1 text-sm text-muted">{{ client.primaryContact.title || 'No title set' }}</p>
             </div>
-            <div class="space-y-1 text-sm text-slate-600">
+            <div class="card-soft space-y-2 text-sm text-soft">
               <p>{{ client.primaryContact.email || 'No email' }}</p>
               <p>{{ client.primaryContact.phone || 'No phone' }}</p>
             </div>
@@ -46,10 +46,10 @@
             <li
               v-for="note in client.notes"
               :key="note.id"
-              class="rounded-xl border border-slate-200 bg-slate-50 p-4"
+              class="card-soft rounded-[1.25rem] p-4"
             >
-              <p class="text-sm text-slate-700">{{ note.content }}</p>
-              <p class="mt-2 text-xs uppercase tracking-[0.14em] text-slate-400">
+              <p class="text-sm text-soft">{{ note.content }}</p>
+              <p class="mt-3 text-caption">
                 {{ note.type || 'general' }}
               </p>
             </li>
@@ -74,7 +74,7 @@
     >
       <RouterLink
         to="/clients"
-        class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+        class="btn-primary"
       >
         Back to Clients
       </RouterLink>
@@ -90,7 +90,7 @@
 
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import ActivityTimeline from '../components/ActivityTimeline.vue'
 import ClientSummaryPanel from '../components/ClientSummaryPanel.vue'
 import EmptyState from '../components/EmptyState.vue'

@@ -9,6 +9,7 @@ export default [
     component: () => import('./pages/AuthLayout.vue'),
     meta: {
       guestOnly: true,
+      requiresAuth: false,
       title: 'Authentication',
     },
     children: [
@@ -18,6 +19,7 @@ export default [
         component: () => import('./pages/login.vue'),
         meta: {
           guestOnly: true,
+          requiresAuth: false,
           title: 'Sign in',
         },
       },
@@ -27,6 +29,7 @@ export default [
         component: () => import('./pages/register.vue'),
         meta: {
           guestOnly: true,
+          requiresAuth: false,
           title: 'Create account',
         },
       },
@@ -36,6 +39,7 @@ export default [
         component: () => import('./pages/forgot-password.vue'),
         meta: {
           guestOnly: true,
+          requiresAuth: false,
           title: 'Forgot password',
         },
       },
@@ -45,6 +49,7 @@ export default [
         component: () => import('./pages/reset-password.vue'),
         meta: {
           guestOnly: true,
+          requiresAuth: false,
           title: 'Reset password',
         },
       },

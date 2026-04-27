@@ -1,20 +1,30 @@
 <template>
-  <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-      {{ label }}
-    </p>
-    <p class="mt-3 text-3xl font-semibold text-slate-900">
-      {{ value }}
-    </p>
-    <p v-if="hint" class="mt-2 text-sm text-slate-500">
-      {{ hint }}
-    </p>
+  <article class="metric-card">
+    <div class="flex items-start justify-between gap-4">
+      <div class="space-y-3">
+        <p class="stat-title">
+          {{ label }}
+        </p>
+
+        <p class="stat-value">
+          {{ value }}
+        </p>
+
+        <p v-if="hint" class="text-sm text-muted">
+          {{ hint }}
+        </p>
+      </div>
+
+      <div v-if="$slots.icon" class="icon-btn text-muted">
+        <slot name="icon" />
+      </div>
+    </div>
   </article>
 </template>
 
 <script setup>
 /**
- * Generic KPI card for CRM dashboard views.
+ * Generic KPI card with optional icon slot.
  */
 defineProps({
   label: {

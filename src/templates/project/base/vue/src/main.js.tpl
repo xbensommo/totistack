@@ -6,11 +6,15 @@
 
 import { ViteSSG } from 'vite-ssg';
 import { createPinia } from 'pinia';
-import { createHead } from '@unhead/vue/client';
 import App from './App.vue';
-import { routes, installRouterGuards } from './app/router/index.js';
+import { routes, installRouterGuards, scrollBehavior } from './app/router/index.js';
 import { registerRootProviders } from './app/provider/provider.js';
 import { bootstrapApp } from './app/boot/bootstrap.js';
+
+import { installActionPipeline } from '@action_modal/plugins/action-plugin.js'; 
+
+import { createAuthActionDefinitions } from '@features/auth/auth.actions.js';
+/*import { createCrmActionDefinitions } from './crm/crm.actions.js';*/
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'vue-sonner/style.css';
@@ -19,11 +23,8 @@ import '@/assets/css/main.css'
 /**
  * Vite SSG application factory.
  */
-export const createApp = ViteSSG(App, { routes }, async ({ app, router }) => {
+export const createApp = ViteSSG(App, { routes, scrollBehavior }, async ({ app, router }) => {
   const pinia = createPinia();
-  const head = createHead();
-
-  app.use(head);
   app.use(pinia);
 
   registerRootProviders(app);
@@ -52,5 +53,15 @@ export const createApp = ViteSSG(App, { routes }, async ({ app, router }) => {
         },
       });
     });
-  }
+  };
+
+  installActionPipeline(app, {
+    actions: [
+      ...createAuthActionDefinitions(),
+      // ...createCrmActionDefinitions(),
+    ],
+    normalizeError(error) {
+      return error instanceof Error ? error : new Error('Action failed.');
+    },
+  });
 });

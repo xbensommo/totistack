@@ -16,7 +16,7 @@ export default function createDashboardRoutes() {
 
   return [
     {
-      path: '/dashboard',
+      path: '',
       name: 'dashboard-home',
       component: localLazy('DashboardPage'),
       meta: {

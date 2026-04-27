@@ -2,15 +2,12 @@
  * @file workflows/services/workflowService.js
  * @description Root-store compatible service factory for the workflows feature.
  */
-import { useAppStore } from '@/stores/appStore'
+import { useAppStore } from '@app/stores/appStore'
 import {
   assertAccess,
   createId,
-  createLegacyService,
-  fetchCollectionItems,
-  getCollectionActions,
+  fetchDirectCollectionItems,
   normalizeError,
-  runAction,
   slugify,
 } from '../../shared/featureToolkit.js'
 
@@ -23,19 +20,23 @@ import {
 export function createWorkflowService({ appStore, access, services = {}, config = {} } = {}) {
   const store = appStore || useAppStore()
   const featureAccess = access || store?.access || null
-  const workflowActions = getCollectionActions(store, 'workflows')
-  const runActions = getCollectionActions(store, 'workflowRuns')
-  const triggerActions = getCollectionActions(store, 'workflowTriggers')
-  const logActions = getCollectionActions(store, 'workflowLogs')
+  const workflowActions = store?.workflowsActions
+  if (!workflowActions) throw new Error('Missing root-store shard actions: store.workflowsActions')
+  const runActions = store?.workflowRunsActions
+  if (!runActions) throw new Error('Missing root-store shard actions: store.workflowRunsActions')
+  const triggerActions = store?.workflowTriggersActions
+  if (!triggerActions) throw new Error('Missing root-store shard actions: store.workflowTriggersActions')
+  const logActions = store?.workflowLogsActions
+  if (!logActions) throw new Error('Missing root-store shard actions: store.workflowLogsActions')
   const settings = { defaultRetryPolicy: { maxRetries: 3, retryDelayMs: 5000 }, ...config }
 
   async function listWorkflows(options = {}) {
-    return fetchCollectionItems(store, 'workflows', options)
+    return fetchDirectCollectionItems(store, 'workflows', workflowActions, options)
   }
 
   async function getWorkflowById(workflowId) {
     try {
-      return await runAction(workflowActions, ['getById'], workflowId)
+      return await workflowActions.getById(workflowId)
     } catch (error) {
       throw normalizeError(error, 'Unable to load the selected workflow.')
     }
@@ -58,9 +59,9 @@ export function createWorkflowService({ appStore, access, services = {}, config 
         updatedAt: new Date().toISOString(),
       }
       if (payload.id) {
-        await runAction(workflowActions, ['update'], workflowId, record)
+        await workflowActions.update(workflowId, record)
       } else {
-        await runAction(workflowActions, ['setById', 'create', 'add'], workflowId, { ...record, createdAt: record.updatedAt })
+        await workflowActions.setById(workflowId, { ...record, createdAt: record.updatedAt })
       }
       await saveTrigger(workflowId, record.trigger)
       return { id: workflowId, ...record }
@@ -80,7 +81,7 @@ export function createWorkflowService({ appStore, access, services = {}, config 
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    await runAction(triggerActions, ['setById', 'create', 'add'], triggerId, record)
+    await triggerActions.setById(triggerId, record)
     return { id: triggerId, ...record }
   }
 
@@ -93,7 +94,7 @@ export function createWorkflowService({ appStore, access, services = {}, config 
       }
       const runId = createId('workflow-run')
       const startedAt = new Date().toISOString()
-      await runAction(runActions, ['setById', 'create', 'add'], runId, {
+      await runActions.setById(runId, {
         workflowId,
         workflowName: workflow.name,
         status: 'running',
@@ -107,12 +108,12 @@ export function createWorkflowService({ appStore, access, services = {}, config 
 
       const output = await executeActions(workflow.actions, payload, services)
       const finishedAt = new Date().toISOString()
-      await runAction(runActions, ['update'], runId, {
+      await runActions.update(runId, {
         status: 'completed',
         output,
         finishedAt,
       })
-      await runAction(workflowActions, ['update'], workflowId, { lastRunAt: finishedAt, updatedAt: finishedAt })
+      await workflowActions.update(workflowId, { lastRunAt: finishedAt, updatedAt: finishedAt })
       await log(workflowId, { workflowRunId: runId, level: 'info', message: `Workflow ${workflow.name} completed successfully.`, context: { output } })
       return { id: runId, workflowId, output, finishedAt }
     } catch (error) {
@@ -123,7 +124,7 @@ export function createWorkflowService({ appStore, access, services = {}, config 
   }
 
   async function listRuns(options = {}) {
-    return fetchCollectionItems(store, 'workflowRuns', options)
+    return fetchDirectCollectionItems(store, 'workflowRuns', runActions, options)
   }
 
   async function log(workflowId, payload) {
@@ -136,7 +137,7 @@ export function createWorkflowService({ appStore, access, services = {}, config 
       context: payload.context || {},
       createdAt: new Date().toISOString(),
     }
-    await runAction(logActions, ['setById', 'create', 'add'], logId, record)
+    await logActions.setById(logId, record)
     return { id: logId, ...record }
   }
 
@@ -179,5 +180,4 @@ async function executeActions(actions = [], payload = {}, services = {}) {
   return output
 }
 
-const legacyService = createLegacyService(() => createWorkflowService({ appStore: useAppStore() }))
-export default legacyService
+export default createWorkflowService

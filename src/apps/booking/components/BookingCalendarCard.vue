@@ -1,42 +1,49 @@
 <template>
-  <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <div class="flex items-center justify-between gap-4">
-      <div>
-        <h2 class="text-lg font-semibold text-slate-950">{{ title }}</h2>
-        <p class="mt-1 text-sm text-slate-600">
-          {{ description }}
-        </p>
+  <div class="card overflow-hidden">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="space-y-2">
+        <p class="section-label">Schedule View</p>
+        <div>
+          <h2 class="section-title">{{ title }}</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-muted">
+            {{ description }}
+          </p>
+        </div>
       </div>
-      <div class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
+
+      <div class="chip self-start">
         Starter
       </div>
     </div>
 
-    <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <article
         v-for="event in events"
         :key="event.id || event.bookingNumber"
-        class="rounded-xl border border-slate-200 p-4"
+        class="card-soft rounded-[1.25rem] transition-theme hover:-translate-y-1 hover:shadow-theme-sm"
       >
-        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <p class="text-caption">
           {{ formatDay(event.startTime) }}
         </p>
-        <h3 class="mt-2 text-sm font-semibold text-slate-950">
+        <h3 class="mt-3 text-base font-semibold text-[var(--color-text)]">
           {{ event.title || event.bookingNumber || 'Booking' }}
         </h3>
-        <p class="mt-1 text-sm text-slate-600">
+        <p class="mt-2 text-sm text-soft">
           {{ formatTimeRange(event.startTime, event.endTime) }}
         </p>
-        <div class="mt-3">
+        <div class="mt-4">
           <slot name="status" :event="event" />
         </div>
       </article>
 
       <article
         v-if="!events.length"
-        class="rounded-xl border border-dashed border-slate-300 p-6 text-sm text-slate-500 sm:col-span-2 xl:col-span-4"
+        class="empty-state sm:col-span-2 xl:col-span-4"
       >
-        No booking events found for this period.
+        <h3 class="text-lg font-semibold text-[var(--color-text)]">No booking events yet</h3>
+        <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted">
+          No booking events were found for this period.
+        </p>
       </article>
     </div>
   </div>

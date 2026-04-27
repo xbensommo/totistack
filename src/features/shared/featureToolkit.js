@@ -1,187 +1,208 @@
 /**
- * @file shared/featureToolkit.js
- * @description Shared runtime helpers for declarative Totistack feature modules.
- */
-
-/**
- * Resolve collection actions from the root app store.
+ * @file src/features/shared/featureToolkit.js
+ * @description Shared, boring helpers for apps/features that use direct root-store shard actions.
  *
- * @param {object} appStore
- * @param {string} collectionName
- * @returns {object}
+ * Rule:
+ *   store.<collectionName>Actions.fetchInitialPage(...)
+ *   store.<collectionName>Actions.getById(id)
+ *   store.<collectionName>Actions.add(payload)
+ *   store.<collectionName>Actions.update(id, patch)
+ *   store.<collectionName>Actions.remove(id)
  */
-export function getCollectionActions(appStore, collectionName) {
-  if (!appStore || !collectionName) {
-    return {}
-  }
 
-  const directKey = `${collectionName}Actions`
-  const direct = appStore[directKey]
-  if (direct && typeof direct === 'object') {
-    return direct
-  }
-
-  const generated = appStore.collectionsActions?.[collectionName]
-  if (generated && typeof generated === 'object') {
-    return generated
-  }
-
-  return {}
-}
-
-/**
- * Execute the first available action name from a list.
- *
- * @param {object} actions
- * @param {string[]} methodNames
- * @param {...any} args
- * @returns {Promise<any>}
- */
-export async function runAction(actions, methodNames, ...args) {
-  for (const methodName of methodNames) {
-    if (typeof actions?.[methodName] === 'function') {
-      return actions[methodName](...args)
-    }
-  }
-
-  throw new Error(`Required collection action is missing. Expected one of: ${methodNames.join(', ')}`)
-}
-
-/**
- * Read collection items from the root store after a collection action updates state.
- *
- * @param {object} appStore
- * @param {string} collectionName
- * @returns {object[]}
- */
-export function getCollectionItems(appStore, collectionName) {
-  const stateSlice = appStore?.[collectionName]
-
-  if (Array.isArray(stateSlice)) {
-    return stateSlice
-  }
-
-  if (Array.isArray(stateSlice?.items)) {
-    return stateSlice.items
-  }
-
-  if (Array.isArray(stateSlice?.value?.items)) {
-    return stateSlice.value.items
-  }
-
-  if (Array.isArray(stateSlice?.value)) {
-    return stateSlice.value
-  }
-
-  return []
-}
-
-/**
- * Fetch an initial page and return the normalized items list.
- *
- * @param {object} appStore
- * @param {string} collectionName
- * @param {object} options
- * @returns {Promise<object[]>}
- */
-export async function fetchCollectionItems(appStore, collectionName, options = {}) {
-  const actions = getCollectionActions(appStore, collectionName)
-  if (typeof actions.fetchInitialPage === 'function') {
-    await actions.fetchInitialPage(options)
-  }
-  return getCollectionItems(appStore, collectionName)
-}
-
-/**
- * Assert access when the root access layer is active.
- *
- * @param {object} access
- * @param {string|string[]} requirement
- * @param {string} fallbackMessage
- */
-export function assertAccess(access, requirement, fallbackMessage = 'You are not allowed to perform this action.') {
-  if (!requirement) return
-
-  if (!access || access.enabled === false) {
-    return
-  }
-
-  const allowed = typeof access.can === 'function'
-    ? access.can(requirement)
-    : true
-
-  if (!allowed) {
-    throw new Error(fallbackMessage)
+export class FeatureError extends Error {
+  constructor(message = 'The requested action could not be completed.', code = 'FEATURE_ERROR', details = null) {
+    super(message)
+    this.name = 'FeatureError'
+    this.code = code
+    this.details = details
   }
 }
 
-/**
- * Create a stable client-side identifier.
- *
- * @param {string} prefix
- * @returns {string}
- */
-export function createId(prefix = 'item') {
-  const safePrefix = String(prefix).trim() || 'item'
-  if (globalThis.crypto?.randomUUID) {
-    return `${safePrefix}_${globalThis.crypto.randomUUID()}`
+export class FeatureValidationError extends FeatureError {
+  constructor(message = 'Some required information is missing or invalid.', details = null) {
+    super(message, 'VALIDATION_ERROR', details)
+    this.name = 'FeatureValidationError'
   }
-  return `${safePrefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
 }
 
-/**
- * Return a trimmed string slug.
- *
- * @param {string} value
- * @returns {string}
- */
+export class FeatureAuthorizationError extends FeatureError {
+  constructor(message = 'You are not allowed to perform this action.', details = null) {
+    super(message, 'FORBIDDEN', details)
+    this.name = 'FeatureAuthorizationError'
+  }
+}
+
+export function normalizeError(error, fallbackMessage = 'The requested action failed.') {
+  if (error instanceof FeatureError) return error
+
+  const message = error?.message || fallbackMessage
+  const normalized = new FeatureError(message, error?.code || 'FEATURE_ERROR', error?.details || null)
+  normalized.cause = error
+  return normalized
+}
+
+export function createId(prefix = 'id') {
+  const random = Math.random().toString(36).slice(2, 10)
+  return `${prefix}_${Date.now().toString(36)}_${random}`
+}
+
 export function slugify(value = '') {
-  return String(value)
-    .toLowerCase()
+  return String(value || '')
     .trim()
+    .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 }
 
-/**
- * Create a proxy that lazily resolves a feature service.
- * Useful for backward compatibility with older direct default imports.
- *
- * @param {() => object} resolver
- * @returns {object}
- */
-export function createLegacyService(resolver) {
-  return new Proxy({}, {
-    get(_target, property) {
-      const service = resolver()
-      const value = service?.[property]
-      if (typeof value === 'function') {
-        return value.bind(service)
-      }
-      return value
-    },
-  })
+export function hasPermission(access, permission) {
+  if (!permission) return true
+
+  const roles = Array.isArray(access?.roles) ? access.roles : []
+  const permissions = Array.isArray(access?.permissions) ? access.permissions : []
+
+  return permissions.includes(permission) || roles.includes('admin') || roles.includes('sysadmin')
+}
+
+export function assertAccess(access, permission, message = 'You are not allowed to perform this action.') {
+  if (!hasPermission(access, permission)) {
+    throw new FeatureAuthorizationError(message, { permission })
+  }
+}
+
+export function requireCollectionActions(store, collectionName) {
+  const actionKey = `${collectionName}Actions`
+  const actions = store?.[actionKey]
+
+  if (!actions || typeof actions !== 'object') {
+    throw new FeatureError(`Missing root-store action object: store.${actionKey}`, 'MISSING_COLLECTION_ACTIONS', {
+      collectionName,
+      actionKey,
+    })
+  }
+
+  return actions
+}
+
+export function requireActionMethod(actions, methodName, actionKey = 'collectionActions') {
+  if (typeof actions?.[methodName] !== 'function') {
+    throw new FeatureError(`Missing shard-provider action method: ${actionKey}.${methodName}`, 'UNSUPPORTED_ACTION', {
+      actionKey,
+      methodName,
+    })
+  }
+
+  return actions[methodName].bind(actions)
 }
 
 /**
- * Normalize a thrown value into a regular Error instance.
- *
- * @param {unknown} error
- * @param {string} fallbackMessage
- * @returns {Error}
+ * Backward-compatible export for older feature code.
+ * New code should use direct store.<collectionName>Actions references.
  */
-export function normalizeError(error, fallbackMessage = 'An unexpected feature error occurred.') {
-  if (error instanceof Error) {
-    return error
+export const getCollectionActions = requireCollectionActions
+
+export function getCollectionState(store, collectionName) {
+  return store?.[collectionName] || null
+}
+
+export function getCollectionItems(store, collectionName) {
+  const state = getCollectionState(store, collectionName)
+  if (Array.isArray(state)) return state
+  if (Array.isArray(state?.items)) return state.items
+  if (Array.isArray(state?.value?.items)) return state.value.items
+  if (Array.isArray(state?.value)) return state.value
+  return []
+}
+
+export function normalizeFilters(filters = []) {
+  if (Array.isArray(filters)) {
+    return filters.filter((filter) => filter?.field && filter?.op && filter.value !== undefined)
   }
 
-  if (typeof error === 'string') {
-    return new Error(error)
+  return Object.entries(filters || {})
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(([field, value]) => ({ field, op: '==', value }))
+}
+
+export function normalizeFetchOptions(options = {}) {
+  const normalized = {
+    ...options,
+    filters: normalizeFilters(options.filters),
+    limit: options.limit ?? options.pageSize ?? 100,
   }
 
-  const message = error && typeof error === 'object' && 'message' in error
-    ? error.message
-    : fallbackMessage
+  delete normalized.pageSize
 
-  return new Error(String(message))
+  if (!Array.isArray(normalized.orderBy)) {
+    if (options.sort?.field) {
+      normalized.orderBy = [{ field: options.sort.field, direction: options.sort.direction || 'desc' }]
+    } else if (options.sortBy) {
+      normalized.orderBy = [{ field: options.sortBy, direction: options.sortDirection || 'desc' }]
+    }
+  }
+
+  delete normalized.sort
+  delete normalized.sortBy
+  delete normalized.sortDirection
+
+  return normalized
+}
+
+export async function fetchDirectCollectionItems(store, collectionName, actions, options = {}) {
+  const result = await actions.fetchInitialPage(normalizeFetchOptions(options))
+
+  if (Array.isArray(result?.items)) return result.items
+  if (Array.isArray(result)) return result
+  return getCollectionItems(store, collectionName)
+}
+
+/**
+ * Backward-compatible export for older feature code.
+ * New code should call store.<collectionName>Actions.fetchInitialPage(...) directly.
+ */
+export async function fetchCollectionItems(store, collectionName, options = {}) {
+  const actions = requireCollectionActions(store, collectionName)
+  return fetchDirectCollectionItems(store, collectionName, actions, options)
+}
+
+/**
+ * Backward-compatible export for older feature code.
+ * New code should call the desired action directly.
+ */
+export async function runAction(actions, methodNames = [], ...args) {
+  const methodName = Array.isArray(methodNames) ? methodNames[0] : methodNames
+  return requireActionMethod(actions, methodName)(...args)
+}
+
+export async function confirmDecision(confirm, confirmation, context = {}) {
+  if (typeof confirm !== 'function') return true
+  const accepted = await confirm(confirmation, context)
+  return accepted !== false
+}
+
+export function createLegacyService(service) {
+  return service
+}
+
+export default {
+  FeatureError,
+  FeatureValidationError,
+  FeatureAuthorizationError,
+  normalizeError,
+  createId,
+  slugify,
+  hasPermission,
+  assertAccess,
+  requireCollectionActions,
+  requireActionMethod,
+  getCollectionActions,
+  getCollectionState,
+  getCollectionItems,
+  normalizeFilters,
+  normalizeFetchOptions,
+  fetchDirectCollectionItems,
+  fetchCollectionItems,
+  runAction,
+  confirmDecision,
+  createLegacyService,
 }

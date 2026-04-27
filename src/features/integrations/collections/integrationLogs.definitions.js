@@ -3,7 +3,7 @@ import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider'
 /** @file integrations/collections/integrationLogs.definitions.js */
 export default defineCollection({
   name: 'integrationLogs',
-  shard: { type: 'monthly' },
+  shard: { type: 'none' },
   schema: {
     integrationId: { type: FIELD_TYPES.STRING, required: true, filterable: true },
     provider: { type: FIELD_TYPES.STRING, required: true, filterable: true },

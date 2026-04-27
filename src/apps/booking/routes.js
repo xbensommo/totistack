@@ -1,8 +1,6 @@
 /**
  * @file booking/routes.js
  * @description Declarative route records for the Booking app.
- *
- * The root router should import these records through the generated route registry.
  */
 
 const routes = [
@@ -33,10 +31,32 @@ const routes = [
     name: 'BookingCreate',
     component: () => import('./pages/BookingCreatePage.vue'),
     meta: {
-      requiresAuth: true,
+      requiresAuth: false,
       feature: 'booking',
-      roles: ['admin', 'manager'],
-      title: 'Create Booking',
+      publicAccess: true,
+      title: 'Book Now',
+    },
+  },
+  {
+    path: '/book',
+    name: 'PublicBookingCreate',
+    component: () => import('./pages/BookingCreatePage.vue'),
+    meta: {
+      requiresAuth: false,
+      feature: 'booking',
+      publicAccess: true,
+      title: 'Make a Booking',
+    },
+  },
+  {
+    path: '/bookings/manage',
+    name: 'BookingLookup',
+    component: () => import('./pages/BookingLookupPage.vue'),
+    meta: {
+      requiresAuth: false,
+      feature: 'booking',
+      publicAccess: true,
+      title: 'Manage Booking',
     },
   },
   {

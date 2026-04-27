@@ -5,6 +5,7 @@
 import manifest from './feature.manifest.js'
 import routes from './routes.js'
 import { createSearchService } from './services/searchService.js'
+import { createSearchActionDefinitions } from './search.actions.js'
 
 export { manifest, routes, createSearchService }
 
@@ -18,4 +19,6 @@ export default {
   manifest,
   routes,
   createServices,
+  createActionDefinitions: createSearchActionDefinitions,
 }
+export { createSearchActionDefinitions }

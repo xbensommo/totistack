@@ -6,9 +6,9 @@ import { FIELD_TYPES, defineCollection } from '@xbensommo/shard-provider';
  */
 const passwordResetTokensCollection = defineCollection({
   name: 'password-reset-tokens',
-  shard: { type: 'daily', field: 'createdAt' },
+  shard: { type: 'none', field: 'createdAt' },
   schema: {
-    userId: { type: FIELD_TYPES.STRING, required: true, filterable: true },
+    user_id : { type: FIELD_TYPES.STRING, required: true, filterable: true },
     token: { type: FIELD_TYPES.STRING, required: true, filterable: true },
     email: { type: FIELD_TYPES.STRING, required: true },
     used: { type: FIELD_TYPES.BOOLEAN, default: false, filterable: true },
@@ -19,7 +19,7 @@ const passwordResetTokensCollection = defineCollection({
   updateableFields: ['used'],
   indexes: [
     { fields: ['token'] },
-    { fields: ['userId', 'used'] },
+    { fields: ['user_id ', 'used'] },
     { fields: ['expiresAt'] }
   ]
 });

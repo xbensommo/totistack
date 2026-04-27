@@ -10,26 +10,12 @@
 
 import { computed } from 'vue';
 import { defineStore } from 'pinia';
-import { createShardedActions } from '@xbensommo/shard-provider';
 import { auth } from '@app/firebase/index.js';
 import shardProvider from '@app/provider/shard-provider.js';
 import useAppStoreState from './state.js';
+import { createRootCollectionRegistry } from './collection-actions.js';
 import accessConfig from '@config/access.config.js';
-import { generatedCollectionNames } from '@generated/collections.js';
 import { getGeneratedServiceBySuffix } from '@generated/services.js';
-
-/**
- * Build collection action helpers from the generated collection registry.
- *
- * @param {Record<string, any>} state
- * @returns {Record<string, any>}
- */
-function buildCollectionActions(state) {
-  return generatedCollectionNames.reduce((actions, collectionName) => {
-    actions[`${collectionName}Actions`] = createShardedActions(collectionName, state, shardProvider);
-    return actions;
-  }, {});
-}
 
 /**
  * Resolve a factory function from a generated service export.
@@ -52,7 +38,9 @@ function resolveFactory(candidate, exportName) {
 
 export const useAppStore = defineStore('appStore', () => {
   const state = useAppStoreState();
-  const collectionActions = buildCollectionActions(state);
+  const collectionRegistry = createRootCollectionRegistry(state);
+  const collectionsActions = collectionRegistry.byName;
+  const legacyCollectionActions = collectionRegistry.legacy;
 
   let accessRuntime = null;
   let accessControl = null;
@@ -71,7 +59,23 @@ export const useAppStore = defineStore('appStore', () => {
    * @param {string} collectionName
    * @returns {any|null}
    */
-  const getCollectionActions = (collectionName) => collectionActions[`${collectionName}Actions`] || null;
+  const getCollectionActions = (collectionName) => collectionRegistry.get(collectionName);
+
+  /**
+   * Lookup collection actions by collection name and throw when missing.
+   *
+   * @param {string} collectionName
+   * @returns {any}
+   */
+  const requireCollectionActions = (collectionName) => collectionRegistry.require(collectionName);
+
+  /**
+   * Lookup the canonical state bucket for a collection.
+   *
+   * @param {string} collectionName
+   * @returns {any|null}
+   */
+  const getCollectionState = (collectionName) => collectionRegistry.getState(collectionName);
 
   /**
    * Set the authenticated user and normalize access fields.
@@ -472,7 +476,11 @@ export const useAppStore = defineStore('appStore', () => {
 
   return {
     ...state,
-    ...collectionActions,
+    collectionsActions,
+    getCollectionActions,
+    requireCollectionActions,
+    getCollectionState,
+    ...legacyCollectionActions,
     isAuthenticated,
     isAccessControlEnabled,
     setCurrentUser,
