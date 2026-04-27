@@ -47,4 +47,4 @@ export const entityActivity = defineCollection({
   },
 })
 
-export default entityActivity
+

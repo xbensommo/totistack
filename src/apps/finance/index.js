@@ -23,3 +23,8 @@ export * as financeReports from './services/financeReportService.js'
 
 export { createFinanceNotifications } from './services/createFinanceNotifications.js'
 export { createFinanceActionDefinitions }
+
+export * from './services/financePdfEngine.js'
+export * from './services/invoicePdfService.js'
+export * from './services/quotationPdfService.js'
+export { default as FinanceDocumentsPage } from './pages/FinanceDocumentsPage.vue'

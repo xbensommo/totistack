@@ -74,5 +74,3 @@ export const auditLogs = defineCollection({
     delete: 'serverOnly',
   },
 })
-
-export default auditLogs

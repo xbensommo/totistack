@@ -7,6 +7,7 @@ const FinanceDashboardPage = () => import('../pages/FinanceDashboardPage.vue')
 const FinanceTransactionsPage = () => import('../pages/FinanceTransactionsPage.vue')
 const FinanceAccountsPage = () => import('../pages/FinanceAccountsPage.vue')
 const FinanceReportsPage = () => import('../pages/FinanceReportsPage.vue')
+const FinanceDocumentsPage = () => import('../pages/FinanceDocumentsPage.vue')
 const FinanceBalanceSheetPage = () => import('../pages/FinanceBalanceSheetPage.vue')
 const FinanceIncomeStatementPage = () => import('../pages/FinanceIncomeStatementPage.vue')
 const FinanceExpenseStatementPage = () => import('../pages/FinanceExpenseStatementPage.vue')
@@ -43,6 +44,17 @@ export default [
       requiresAuth: true,
       app: 'finance',
       permission: 'finance.account.manage',
+    },
+  },
+  {
+    path: '/finance/documents',
+    name: 'FinanceDocuments',
+    component: FinanceDocumentsPage,
+    meta: {
+      title: 'Finance PDF Documents',
+      requiresAuth: true,
+      app: 'finance',
+      permission: 'finance.document.pdf',
     },
   },
   {

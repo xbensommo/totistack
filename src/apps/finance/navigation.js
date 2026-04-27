@@ -26,10 +26,17 @@ export default [
     order: 42,
   },
   {
+    id: 'finance-documents',
+    label: 'PDF Documents',
+    to: '/finance/documents',
+    icon: 'FileText',
+    order: 43,
+  },
+  {
     id: 'finance-reports',
     label: 'Reports',
     to: '/finance/reports',
     icon: 'ChartNoAxesColumn',
-    order: 43,
+    order: 44,
   },
 ]

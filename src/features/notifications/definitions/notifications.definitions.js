@@ -4,7 +4,7 @@ import { defineCollection, FIELD_TYPES } from '@xbensommo/shard-provider'
 
 const MAP = FIELD_TYPES.MAP || FIELD_TYPES.OBJECT
 
-const notifications = defineCollection({
+export const notifications = defineCollection({
   name: 'notifications',
   shard: { type: 'none' },
   schema: {
@@ -37,5 +37,3 @@ const notifications = defineCollection({
 })
 
 
-
-export default notifications

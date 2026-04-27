@@ -24,6 +24,7 @@ export const FINANCE_ACTIONS = Object.freeze({
   TRANSACTION_POST: 'finance.transaction.post',
   JOURNAL_REVERSE: 'finance.journal.reverse',
   REPORT_READ: 'finance.report.read',
+  DOCUMENT_PDF: 'finance.document.pdf',
   PERIOD_CLOSE: 'finance.period.close',
   PAYOUT_APPROVE: 'finance.payout.approve',
   OWN_PAYOUT_READ: 'finance.own_payout.read',
@@ -45,6 +46,7 @@ export const FINANCE_ROLE_MATRIX = Object.freeze({
     FINANCE_ACTIONS.TRANSACTION_POST,
     FINANCE_ACTIONS.JOURNAL_REVERSE,
     FINANCE_ACTIONS.REPORT_READ,
+    FINANCE_ACTIONS.DOCUMENT_PDF,
     FINANCE_ACTIONS.PERIOD_CLOSE,
     FINANCE_ACTIONS.PAYOUT_APPROVE,
     FINANCE_ACTIONS.OWN_PAYOUT_READ,
@@ -56,6 +58,7 @@ export const FINANCE_ROLE_MATRIX = Object.freeze({
     FINANCE_ACTIONS.TRANSACTION_EDIT_DRAFT,
     FINANCE_ACTIONS.TRANSACTION_DELETE_DRAFT,
     FINANCE_ACTIONS.REPORT_READ,
+    FINANCE_ACTIONS.DOCUMENT_PDF,
   ]),
   [FINANCE_ROLES.CONSULTANT]: new Set([
     FINANCE_ACTIONS.VIEW,

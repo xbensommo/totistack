@@ -21,6 +21,7 @@
     "firebase": "^12.6.0",
     "gsap": "^3.14.1",
     "pinia": "^3.0.4",
+    "pdfmake": "latest",
     "tailwindcss": "^4.2.2",
     "uuid": "^11.1.0",
     "vite": "^7.2.4",

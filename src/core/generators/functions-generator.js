@@ -363,6 +363,71 @@ async function validateGeneratedRegistries(projectPath) {
   }
 }
 
+async function ensureFunctionsPackageScripts(projectPath) {
+  const packagePath = path.join(projectPath, 'functions', 'package.json')
+  if (!(await fs.pathExists(packagePath))) return
+
+  const packageJson = await fs.readJson(packagePath)
+  packageJson.scripts = {
+    ...(packageJson.scripts || {}),
+    'seed:sys-admin': packageJson.scripts?.['seed:sys-admin'] || 'node scripts/seed-sys-admin.mjs',
+  }
+
+  await fs.writeJson(packagePath, packageJson, { spaces: 2 })
+}
+
+async function ensureAuthControlPlaneExport(projectPath) {
+  const indexPath = path.join(projectPath, 'functions', 'src', 'index.js')
+  const exportLine = "export * from './auth-control-plane.js'"
+
+  if (!(await fs.pathExists(indexPath))) {
+    await fs.ensureDir(path.dirname(indexPath))
+    await fs.writeFile(indexPath, `${exportLine}\n`)
+    return
+  }
+
+  const current = await fs.readFile(indexPath, 'utf8')
+  if (current.includes(exportLine)) return
+
+  await fs.writeFile(indexPath, `${current.trimEnd()}\n\n${exportLine}\n`)
+}
+
+async function installAuthControlPlane(projectPath, config = {}) {
+  const selectedFeatures = new Set(Array.isArray(config.features) ? config.features : [])
+  if (!selectedFeatures.has('auth')) return
+
+  if (!(await fs.pathExists(AUTH_CONTROL_PLANE_SOURCE_DIR))) {
+    throw new Error(`Auth control-plane source directory was not found: ${AUTH_CONTROL_PLANE_SOURCE_DIR}`)
+  }
+
+  const functionsSrcDir = path.join(projectPath, 'functions', 'src')
+  await fs.ensureDir(functionsSrcDir)
+
+  await fs.copy(AUTH_CONTROL_PLANE_SOURCE_DIR, functionsSrcDir, {
+    overwrite: true,
+    errorOnExist: false,
+    filter(sourcePath) {
+      return path.basename(sourcePath) !== 'index.js'
+    },
+  })
+
+  await fs.copy(
+    path.join(AUTH_CONTROL_PLANE_SOURCE_DIR, 'index.js'),
+    path.join(functionsSrcDir, 'auth-control-plane.js'),
+    { overwrite: true, errorOnExist: false },
+  )
+
+  if (await fs.pathExists(AUTH_CONTROL_PLANE_SCRIPT_DIR)) {
+    await fs.copy(AUTH_CONTROL_PLANE_SCRIPT_DIR, path.join(projectPath, 'functions', 'scripts'), {
+      overwrite: true,
+      errorOnExist: false,
+    })
+  }
+
+  await ensureFunctionsPackageScripts(projectPath)
+  await ensureAuthControlPlaneExport(projectPath)
+}
+
 /**
  * Generate the Firebase Functions backend for selected Totistack server features.
  *
