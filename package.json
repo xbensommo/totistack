@@ -1,6 +1,6 @@
 {
   "name": "@xbensommo/totistack",
-  "version": "2.1.13",
+  "version": "2.1.14",
   "description": "Totistack v2 - Modular business application framework",
   "type": "module",
   "bin": {

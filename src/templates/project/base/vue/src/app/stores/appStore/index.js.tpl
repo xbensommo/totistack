@@ -10,7 +10,7 @@
 
 import { computed } from 'vue';
 import { defineStore } from 'pinia';
-import { auth } from '@app/firebase/index.js';
+import { auth, functions } from '@app/firebase/index.js';
 import shardProvider from '@app/provider/shard-provider.js';
 import useAppStoreState from './state.js';
 import { createRootCollectionRegistry } from './collection-actions.js';
@@ -303,9 +303,14 @@ export const useAppStore = defineStore('appStore', () => {
     try {
       const authFactoryCandidate = getGeneratedServiceBySuffix('create-auth-access-service');
       const accessFactoryCandidate = getGeneratedServiceBySuffix('create-access-control-service');
+      const serverActionsFactoryCandidate = getGeneratedServiceBySuffix('create-auth-server-actions');
 
       const createAccessControlService = resolveFactory(accessFactoryCandidate, 'createAccessControlService');
       const createAuthAccessService = resolveFactory(authFactoryCandidate, 'createAuthAccessService');
+      const createAuthServerActions = resolveFactory(serverActionsFactoryCandidate, 'createAuthServerActions');
+      const authServerActions = typeof createAuthServerActions === 'function'
+        ? createAuthServerActions({ functions })
+        : null;
 
       if (typeof createAccessControlService === 'function') {
         accessControl = createAccessControlService({
@@ -325,6 +330,7 @@ export const useAppStore = defineStore('appStore', () => {
           collectionActions: getCollectionActions,
           config: accessConfig,
           accessControl,
+          serverActions: authServerActions,
           storeApi: {
             syncAccessState,
             clearAccessState,

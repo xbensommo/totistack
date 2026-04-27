@@ -54,11 +54,17 @@ function buildCollectionsRegistry() {
 const collectionModuleImports = import.meta.glob(
   [
     '../apps/*/collections/**/*.js',
+    '../apps/*/definitions/**/*.js',
     '../features/*/collections/**/*.js',
+    '../features/*/definitions/**/*.js',
     '!../apps/*/collections/**/*.test.js',
     '!../apps/*/collections/**/*.spec.js',
+    '!../apps/*/definitions/**/*.test.js',
+    '!../apps/*/definitions/**/*.spec.js',
     '!../features/*/collections/**/*.test.js',
     '!../features/*/collections/**/*.spec.js',
+    '!../features/*/definitions/**/*.test.js',
+    '!../features/*/definitions/**/*.spec.js',
   ],
   { eager: true },
 )
@@ -289,7 +295,7 @@ export const links = createGeneratedRoutes()
   return [
     {
       path: '/',
-      component: () => import('@/PublicLayOut.vue'),
+      component: () => import('@app/views/public/PublicLayout.vue'),
       children: publicChildren,
     },
     {

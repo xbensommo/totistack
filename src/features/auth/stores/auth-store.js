@@ -1,9 +1,16 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import {
+  hasAllAuthPermissions,
+  hasAnyAuthPermission,
+  hasAuthPermission,
+  normalizeRoleKeys,
+  resolveEffectivePermissions,
+} from '../permissions.js'
 
 /**
  * Thin auth feature store for local UI state only.
- * The source of truth remains the root access/app store.
+ * The root access store remains the source of truth.
  */
 export const useAuthStore = defineStore('authFeature', () => {
   const user = ref(null)
@@ -13,8 +20,10 @@ export const useAuthStore = defineStore('authFeature', () => {
 
   const isAuthenticated = computed(() => Boolean(user.value?.uid || user.value?.id))
   const currentUser = computed(() => user.value)
-  const userRoles = computed(() => Array.isArray(user.value?.roles) ? user.value.roles : [])
+  const userRoles = computed(() => normalizeRoleKeys(user.value?.roles || [user.value?.role]))
+  const userPermissions = computed(() => resolveEffectivePermissions(user.value || {}))
   const isAdmin = computed(() => userRoles.value.includes('admin') || userRoles.value.includes('sysadmin'))
+  const isPrivileged = computed(() => userRoles.value.some((role) => ['admin', 'security-admin', 'sysadmin'].includes(role)))
 
   function syncFromAccess(access = null) {
     user.value = access ? { ...access } : null
@@ -33,6 +42,26 @@ export const useAuthStore = defineStore('authFeature', () => {
     user.value = null
   }
 
+  function hasPermission(permission) {
+    return hasAuthPermission(user.value, permission)
+  }
+
+  function hasAnyPermission(permissions = []) {
+    return hasAnyAuthPermission(user.value, permissions)
+  }
+
+  function hasAllPermissions(permissions = []) {
+    return hasAllAuthPermissions(user.value, permissions)
+  }
+
+  function hasRole(role) {
+    return userRoles.value.includes(role)
+  }
+
+  function hasAnyRole(roles = []) {
+    return normalizeRoleKeys(roles).some((role) => userRoles.value.includes(role))
+  }
+
   return {
     user,
     loading,
@@ -41,11 +70,18 @@ export const useAuthStore = defineStore('authFeature', () => {
     isAuthenticated,
     currentUser,
     userRoles,
+    userPermissions,
     isAdmin,
+    isPrivileged,
     syncFromAccess,
     setLoading,
     setError,
     clearUser,
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
+    hasRole,
+    hasAnyRole,
   }
 })
 

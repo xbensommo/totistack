@@ -40,7 +40,7 @@ export async function runCLI() {
     program
       .name('toti')
       .description('Totistack v2 – Modular business app scaffolder')
-      .version('2.0.0');
+      .version('2.2.13');
 
     // Register commands with dependency injection
     createCommand(program);

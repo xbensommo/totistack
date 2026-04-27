@@ -1,30 +1,58 @@
 /** @file src/features/cms/permissions.js */
+export const CMS_ROLES = Object.freeze({
+  ADMIN: 'cms.admin',
+  EDITOR: 'cms.editor',
+  PUBLISHER: 'cms.publisher',
+  VIEWER: 'cms.viewer',
+})
 
 export const CMS_PERMISSIONS = Object.freeze({
-  PAGES_VIEW: 'cms.pages.read',
+  DASHBOARD_VIEW: 'cms.dashboard.view',
+  PAGES_READ: 'cms.pages.read',
   PAGES_CREATE: 'cms.pages.create',
   PAGES_UPDATE: 'cms.pages.update',
-  PAGES_DELETE: 'cms.pages.delete',
   PAGES_PUBLISH: 'cms.pages.publish',
-  CONTENT_TYPES_VIEW: 'cms.contentTypes.read',
-  CONTENT_TYPES_MANAGE: 'cms.contentTypes.manage',
+  PAGES_ARCHIVE: 'cms.pages.archive',
+  PAGES_DELETE: 'cms.pages.delete',
+  ENTRIES_READ: 'cms.entries.read',
+  ENTRIES_CREATE: 'cms.entries.create',
+  ENTRIES_UPDATE: 'cms.entries.update',
+  ENTRIES_PUBLISH: 'cms.entries.publish',
+  ENTRIES_ARCHIVE: 'cms.entries.archive',
+  CONTENT_TYPES_MANAGE: 'cms.content_types.manage',
+  MENUS_MANAGE: 'cms.menus.manage',
+  REDIRECTS_MANAGE: 'cms.redirects.manage',
 })
 
-export function hasCmsPermission(actor, permission) {
-  const roles = Array.isArray(actor?.roles) ? actor.roles : []
-  const permissions = Array.isArray(actor?.permissions) ? actor.permissions : []
-  return permissions.includes(permission) || roles.includes('admin') || roles.includes('sysadmin')
-}
+export const cmsPermissions = Object.freeze(Object.values(CMS_PERMISSIONS))
 
-export const cmsRoleTemplates = Object.freeze({
-  admin: Object.values(CMS_PERMISSIONS),
-  consultant: [CMS_PERMISSIONS.PAGES_VIEW],
-  receptionist: [CMS_PERMISSIONS.PAGES_VIEW],
-  viewer: [CMS_PERMISSIONS.PAGES_VIEW],
+export const cmsRolePermissions = Object.freeze({
+  [CMS_ROLES.ADMIN]: cmsPermissions,
+  [CMS_ROLES.EDITOR]: [
+    CMS_PERMISSIONS.DASHBOARD_VIEW,
+    CMS_PERMISSIONS.PAGES_READ,
+    CMS_PERMISSIONS.PAGES_CREATE,
+    CMS_PERMISSIONS.PAGES_UPDATE,
+    CMS_PERMISSIONS.ENTRIES_READ,
+    CMS_PERMISSIONS.ENTRIES_CREATE,
+    CMS_PERMISSIONS.ENTRIES_UPDATE,
+    CMS_PERMISSIONS.MENUS_MANAGE,
+  ],
+  [CMS_ROLES.PUBLISHER]: [
+    CMS_PERMISSIONS.DASHBOARD_VIEW,
+    CMS_PERMISSIONS.PAGES_READ,
+    CMS_PERMISSIONS.PAGES_UPDATE,
+    CMS_PERMISSIONS.PAGES_PUBLISH,
+    CMS_PERMISSIONS.PAGES_ARCHIVE,
+    CMS_PERMISSIONS.ENTRIES_READ,
+    CMS_PERMISSIONS.ENTRIES_UPDATE,
+    CMS_PERMISSIONS.ENTRIES_PUBLISH,
+    CMS_PERMISSIONS.ENTRIES_ARCHIVE,
+    CMS_PERMISSIONS.REDIRECTS_MANAGE,
+  ],
+  [CMS_ROLES.VIEWER]: [
+    CMS_PERMISSIONS.DASHBOARD_VIEW,
+    CMS_PERMISSIONS.PAGES_READ,
+    CMS_PERMISSIONS.ENTRIES_READ,
+  ],
 })
-
-export default {
-  module: 'cms',
-  permissions: Object.values(CMS_PERMISSIONS),
-  roleTemplates: cmsRoleTemplates,
-}

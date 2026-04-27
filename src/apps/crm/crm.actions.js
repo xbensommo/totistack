@@ -60,7 +60,7 @@ export function createCrmActionDefinitions() {
         }
         return context.services.crmWorkflow.completeTask(context.target.id, context)
       },
-    },,
+    },
     {
       type: 'crm.lead.update',
       permission: CRM_PERMISSIONS.LEADS_UPDATE,

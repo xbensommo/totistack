@@ -10,12 +10,13 @@ import AUTH_PERMISSIONS from './permissions.js'
 export { manifest, routes, AUTH_PERMISSIONS }
 export * from './permissions.js'
 export * from './services/create-auth-access-service.js'
+export * from './services/create-auth-role-profile.js'
+export * from './services/access-control.service.js'
 export * from './guards/authGuard.js'
+export * from './guards/accessGuard.js'
 export * from './guards/guestGuard.js'
 export * from './hooks/use-auth.js'
 export * from './auth.actions.js'
+export * from './server-actions/index.js'
 
-export default {
-  manifest,
-  routes,
-}
+export default { manifest, routes }

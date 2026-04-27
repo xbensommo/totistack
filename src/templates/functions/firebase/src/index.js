@@ -56,3 +56,5 @@ export const notificationCleanupTokens = onSchedule(
   },
   cleanupStaleTokens,
 )
+
+export * from './generated/functions.generated.js'

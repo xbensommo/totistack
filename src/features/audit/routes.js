@@ -11,6 +11,7 @@ export default [
       requiresAuth: true,
       feature: 'audit',
       permissions: [AUDIT_PERMISSIONS.VIEW],
+      title: 'Audit logs',
     },
   },
 ]

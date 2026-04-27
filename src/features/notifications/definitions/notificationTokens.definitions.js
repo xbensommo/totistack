@@ -28,5 +28,4 @@ export const notificationTokens = defineCollection({
   ],
 })
 
-export notificationTokens
-
+export default notificationTokens

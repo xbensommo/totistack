@@ -1,0 +1,19 @@
+{
+  "indexes": [
+    { "collectionGroup": "users", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "status", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" } ] },
+    { "collectionGroup": "users", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "role", "order": "ASCENDING" }, { "fieldPath": "status", "order": "ASCENDING" } ] },
+    { "collectionGroup": "users", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "lastAccessReviewAt", "order": "ASCENDING" }, { "fieldPath": "status", "order": "ASCENDING" } ] },
+    { "collectionGroup": "users", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "claimsAccessVersion", "order": "ASCENDING" }, { "fieldPath": "accessVersion", "order": "ASCENDING" } ] },
+    { "collectionGroup": "user_invites", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "tokenHash", "order": "ASCENDING" } ] },
+    { "collectionGroup": "user_invites", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "status", "order": "ASCENDING" }, { "fieldPath": "expiresAt", "order": "ASCENDING" } ] },
+    { "collectionGroup": "sessions", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "userId", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" } ] },
+    { "collectionGroup": "sessions", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "userId", "order": "ASCENDING" }, { "fieldPath": "status", "order": "ASCENDING" } ] },
+    { "collectionGroup": "auditLogs", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "entityType", "order": "ASCENDING" }, { "fieldPath": "entityId", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" } ] },
+    { "collectionGroup": "auditLogs", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "controlId", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" } ] },
+    { "collectionGroup": "auditLogs", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "actorId", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" } ] },
+    { "collectionGroup": "auditLogs", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "reviewStatus", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" } ] },
+    { "collectionGroup": "access_reviews", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "periodKey", "order": "ASCENDING" }, { "fieldPath": "scope", "order": "ASCENDING" } ] },
+    { "collectionGroup": "security_policies", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "code", "order": "ASCENDING" }, { "fieldPath": "status", "order": "ASCENDING" } ] }
+  ],
+  "fieldOverrides": []
+}

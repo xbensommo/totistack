@@ -12,6 +12,7 @@ import { installCollection } from '../installer/collection-installer.js'
 import { generateConfig } from './config-generator.js'
 import { generateDocumentation } from './document-generator.js'
 import { generateAssemblyArtifacts } from './assembly-generator.js'
+import { generateFunctionsArtifacts } from './functions-generator.js'
 import { appRegistry, featureRegistry } from '../registry/index.js'
 import { getTemplatesDir } from '../utils/path.js'
 import { logger } from '../utils/logger.js'
@@ -307,6 +308,9 @@ export async function generateProject(config, projectPath) {
 
     await generateAssemblyArtifacts(fullProjectPath)
     logger.debug('Generated assembly artifacts')
+
+    await generateFunctionsArtifacts(config, fullProjectPath)
+    logger.debug('Generated Firebase Functions artifacts when required')
 
     await generateDocumentation(config, fullProjectPath)
     logger.debug('Documentation generated')

@@ -7,7 +7,7 @@ export default {
   id: 'server-actions',
   type: 'feature',
   name: 'Server Actions',
-  version: '1.0.0',
+  version: '2.2.13',
   description: 'Developer-declared trusted operation layer for Totistack. Ordinary CRUD remains on shard-provider actions.',
   dependencies: {
     features: ['auth', 'notifications', 'audit'],

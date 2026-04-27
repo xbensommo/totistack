@@ -1,40 +1,81 @@
 <template>
-  <section class="space-y-6">
-    <header class="space-y-2">
-      <p class="text-sm uppercase tracking-[0.2em] opacity-60">Catalog</p>
-      <h1 class="text-3xl font-semibold">Products and services</h1>
-      <p class="max-w-3xl opacity-70">
-        Manage physical products, service offerings, variants, pricing, publishing state, and storefront visibility from one catalog.
-      </p>
-    </header>
+  <CommercePageShell eyebrow="Commerce" title="Products" description="Manage catalog records with cheap client-side draft edits and server-side publish decisions.">
+    <template #actions>
+      <button type="button" class="border border-[var(--color-border,#e5e7eb)] px-4 py-2 text-sm font-medium" @click="reload">Refresh</button>
+    </template>
 
-    <ProductListToolbar />
+    <CommerceMetricGrid :metrics="metrics" />
 
-    <div class="grid gap-4 xl:grid-cols-2">
-      <article class="rounded-3xl border p-6">
-        <h2 class="text-lg font-semibold">Physical product basics</h2>
-        <ul class="mt-3 space-y-2 text-sm opacity-70">
-          <li>• name, slug, categories, media, SKU root</li>
-          <li>• variants with price, compare-at price, stock, threshold</li>
-          <li>• shipping profile, tax profile, visibility</li>
-        </ul>
-      </article>
-      <article class="rounded-3xl border p-6">
-        <h2 class="text-lg font-semibold">Service basics</h2>
-        <ul class="mt-3 space-y-2 text-sm opacity-70">
-          <li>• type = service and fulfillmentType = service</li>
-          <li>• non-stock-tracked variants with price and duration</li>
-          <li>• optional serviceConfig for booking, delivery mode, lead time</li>
-        </ul>
-      </article>
-    </div>
-
-    <div class="rounded-3xl border p-6 opacity-80">
-      Product publication now supports notification integration so catalog managers are alerted when listings go live.
-    </div>
-  </section>
+    <section class="border border-[var(--color-border,#e5e7eb)] bg-[var(--color-background,#ffffff)]">
+      <div class="flex flex-col gap-3 border-b border-[var(--color-border,#e5e7eb)] p-4 md:flex-row md:items-center md:justify-between">
+        <input v-model="search" type="search" placeholder="Search" class="w-full border border-[var(--color-border,#e5e7eb)] bg-transparent px-3 py-2 text-sm md:max-w-sm" />
+        <p class="text-sm text-[var(--color-text-muted,#64748b)]">{{ loading ? 'Loading...' : `${filteredItems.length} visible records` }}</p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-left text-sm">
+          <thead class="bg-[var(--color-surface,#f8fafc)] text-xs uppercase tracking-[0.14em] text-[var(--color-text-muted,#64748b)]">
+            <tr>
+              <th v-for="column in columns" :key="column.key" class="px-4 py-3 font-medium">{{ column.label }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in filteredItems" :key="item.id" class="border-t border-[var(--color-border,#e5e7eb)]">
+              <td v-for="column in columns" :key="column.key" class="px-4 py-3 align-top">{{ formatCell(item, column.key) }}</td>
+            </tr>
+            <tr v-if="!filteredItems.length">
+              <td :colspan="columns.length" class="px-4 py-10 text-center text-[var(--color-text-muted,#64748b)]">No records found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </CommercePageShell>
 </template>
 
 <script setup>
-import ProductListToolbar from '../components/products/ProductListToolbar.vue'
+import { computed, onMounted, ref } from 'vue'
+import { useAppStore } from '@app/stores/appStore'
+import CommerceMetricGrid from '../components/CommerceMetricGrid.vue'
+import CommercePageShell from '../components/CommercePageShell.vue'
+import { fetchPage, getCollectionItems, normalizeDate, normalizeMoney } from '../services/commerceStoreAccess.js'
+
+const store = useAppStore()
+const search = ref('')
+const loading = ref(false)
+const collectionName = 'commerceProducts'
+const columns = [{ key: 'title', label: 'Product' }, { key: 'status', label: 'Status' }, { key: 'price', label: 'Price' }, { key: 'stockQuantity', label: 'Stock' }, { key: 'updatedAt', label: 'Updated' }]
+
+const items = computed(() => getCollectionItems(store, collectionName))
+const filteredItems = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return items.value
+  return items.value.filter((item) => JSON.stringify(item).toLowerCase().includes(q))
+})
+const metrics = computed(() => [{ label: 'Products', value: items.value.length }, { label: 'Published', value: items.value.filter((i) => i.status === 'published').length }, { label: 'Drafts', value: items.value.filter((i) => i.status === 'draft').length }, { label: 'Low stock', value: items.value.filter((i) => Number(i.stockQuantity || 0) <= Number(i.lowStockThreshold || 0)).length }])
+
+onMounted(reload)
+
+async function reload() {
+  loading.value = true
+  try {
+    await fetchPage(store, collectionName, {
+      limit: 30,
+      orderBy: 'createdAt',
+      orderDirection: 'desc',
+      filters: [{ field: 'isDeleted', op: '==', value: false }],
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+function formatCell(item, key) {
+  const value = key.split('.').reduce((acc, part) => acc?.[part], item)
+  if (key.toLowerCase().includes('price') || key.toLowerCase().includes('total') || key.toLowerCase().includes('amount')) return normalizeMoney(value, item.currency || 'NAD')
+  const date = key.endsWith('At') ? normalizeDate(value) : null
+  if (date) return date.toLocaleDateString()
+  if (Array.isArray(value)) return `${value.length} item${value.length === 1 ? '' : 's'}`
+  if (value && typeof value === 'object') return '—'
+  return value ?? '—'
+}
 </script>

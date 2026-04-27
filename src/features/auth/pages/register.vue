@@ -34,7 +34,7 @@
 
 <script setup>
 import { reactive, ref } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
 import accessConfig from '@config/access.config.js';
 import { useAppStore } from '@app/stores/appStore/index.js';
@@ -43,6 +43,7 @@ import AuthField from '../components/AuthField.vue';
 
 const store = useAppStore();
 const router = useRouter();
+const route = useRoute();
 const loading = ref(false);
 const errors = ref({});
 const form = reactive({
@@ -76,6 +77,7 @@ async function handleSubmit() {
       lastName: form.lastName,
       displayName: `${form.firstName} ${form.lastName}`.trim(),
       email: form.email,
+      inviteToken: String(route.query.invite || route.query.token || ''),
     });
     toast.success('Account created successfully.');
     router.push(accessConfig.routes.defaultAuthenticated || '/crm');

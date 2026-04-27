@@ -19,9 +19,20 @@ export function useAuth() {
   const isAuthenticated = computed(() => authStore.isAuthenticated)
   const loading = computed(() => authStore.loading || actionLoading.value)
   const userRoles = computed(() => authStore.userRoles)
+  const userPermissions = computed(() => authStore.userPermissions)
   const isAdmin = computed(() => authStore.isAdmin)
+  const isPrivileged = computed(() => authStore.isPrivileged)
 
   async function syncCurrentUser() {
+    const access = typeof authService?.getCurrentAccess === 'function'
+      ? authService.getCurrentAccess()
+      : null
+
+    if (access) {
+      authStore.syncFromAccess(access)
+      return access
+    }
+
     const firebaseUser = authService?.auth?.currentUser || authService?.currentUser || null
     if (firebaseUser && typeof authService?.syncAuthenticatedUser === 'function') {
       const profile = await authService.syncAuthenticatedUser(firebaseUser)
@@ -38,7 +49,7 @@ export function useAuth() {
     return firebaseUser
   }
 
-  async function run(action, errorMessage) {
+  async function run(action, errorMessage, ...args) {
     if (!authService || typeof authService[action] !== 'function') {
       throw new Error(`Auth service action is not available: ${action}`)
     }
@@ -48,7 +59,7 @@ export function useAuth() {
     authStore.setError(null)
 
     try {
-      const result = await authService[action](...Array.prototype.slice.call(arguments, 2))
+      const result = await authService[action](...args)
       await syncCurrentUser()
       return result
     } catch (error) {
@@ -61,28 +72,37 @@ export function useAuth() {
   }
 
   const login = (email, password) => run('login', 'Unable to sign in.', email, password)
-  const register = (email, password, profile = {}) => run('signUp', 'Unable to create account.', email, password, profile)
-  const loginWithProvider = (provider) => run('loginWithSocial', 'Unable to sign in with provider.', provider)
-  const registerWithProvider = loginWithProvider
-  const logout = async () => {
-    await run('logout', 'Unable to sign out.')
-    router.push({ name: 'auth.login' })
-  }
+  const register = (email, password, profileData = {}) => run('signUp', 'Unable to create account.', email, password, profileData)
+  const loginWithProvider = (provider) => run('loginWithSocial', 'Unable to sign in.', provider)
+  const registerWithProvider = (provider) => run('loginWithSocial', 'Unable to create account.', provider)
+  const logout = () => run('logout', 'Unable to sign out.')
   const sendPasswordReset = (email) => run('sendPasswordReset', 'Unable to send password reset.', email)
   const resetPassword = (code, newPassword) => run('resetPassword', 'Unable to reset password.', code, newPassword)
   const updateUserProfile = (profileData) => run('updateProfile', 'Unable to update profile.', profileData)
   const changeUserPassword = (currentPassword, newPassword) => run('changePassword', 'Unable to change password.', currentPassword, newPassword)
 
   function hasRole(role) {
-    return userRoles.value.includes(role)
+    return authStore.hasRole(role)
   }
 
   function hasAnyRole(roles = []) {
-    return roles.some((role) => userRoles.value.includes(role))
+    return authStore.hasAnyRole(roles)
   }
 
   function hasAllRoles(roles = []) {
-    return roles.every((role) => userRoles.value.includes(role))
+    return roles.every((role) => authStore.hasRole(role))
+  }
+
+  function hasPermission(permission) {
+    return authStore.hasPermission(permission)
+  }
+
+  function hasAnyPermission(permissions = []) {
+    return authStore.hasAnyPermission(permissions)
+  }
+
+  function hasAllPermissions(permissions = []) {
+    return authStore.hasAllPermissions(permissions)
   }
 
   onMounted(async () => {
@@ -105,7 +125,9 @@ export function useAuth() {
     loading,
     actionLoading,
     userRoles,
+    userPermissions,
     isAdmin,
+    isPrivileged,
     login,
     register,
     loginWithProvider,
@@ -118,12 +140,15 @@ export function useAuth() {
     hasRole,
     hasAnyRole,
     hasAllRoles,
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
     redirectTarget: computed(() => route.query.redirect || '/'),
   }
 }
 
 export function useAuthGuard() {
-  const { isAuthenticated, loading, hasAnyRole } = useAuth()
+  const { isAuthenticated, loading, hasAnyRole, hasAllPermissions } = useAuth()
   const router = useRouter()
   const route = useRoute()
 
@@ -152,7 +177,16 @@ export function useAuthGuard() {
     return true
   }
 
-  return { requireAuth, requireGuest, requireRole }
+  function requirePermission(permissions, redirectPath = '/') {
+    const permissionArray = Array.isArray(permissions) ? permissions : [permissions]
+    if (!loading.value && (!isAuthenticated.value || !hasAllPermissions(permissionArray))) {
+      router.push(isAuthenticated.value ? redirectPath : { path: '/auth', query: { redirect: route.fullPath } })
+      return false
+    }
+    return true
+  }
+
+  return { requireAuth, requireGuest, requireRole, requirePermission }
 }
 
 export default { useAuth, useAuthGuard }

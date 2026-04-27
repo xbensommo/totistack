@@ -12,3 +12,4 @@ export * from './route-generator.js';
 export * from './store-generator.js';
 export * from './config-generator.js';
 export * from './document-generator.js';
+export * from './functions-generator.js';
